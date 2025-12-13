@@ -16,6 +16,8 @@ export interface PayoutDetails {
 export interface User {
   id: string;
   name: string;
+  email: string; // Added email
+  password?: string; // Added for auth simulation
   avatar: string;
   role: UserRole;
   verified: boolean; // Simulates NADRA verification
@@ -23,6 +25,13 @@ export interface User {
   status?: 'Active' | 'Banned';
   agreedToTerms?: boolean;
   payoutDetails?: PayoutDetails; // For Freelancers to receive money
+  // Freelancer specific fields directly on User for simplicity in this demo
+  title?: string;
+  bio?: string;
+  hourlyRate?: number;
+  skills?: string[];
+  rating?: number;
+  jobsCompleted?: number;
 }
 
 export interface PlatformPaymentDetails {
@@ -52,6 +61,17 @@ export interface Job {
   applicants: number;
   status: 'Open' | 'In Progress' | 'Completed' | 'Paid' | 'Cancelled';
   assignedTo?: string; // Freelancer ID
+}
+
+export interface Proposal {
+  id: string;
+  jobId: string;
+  freelancerId: string;
+  freelancerName: string;
+  coverLetter: string;
+  bidAmount: number;
+  submittedAt: string;
+  status: 'Pending' | 'Accepted' | 'Rejected';
 }
 
 export interface FreelancerProfile {
