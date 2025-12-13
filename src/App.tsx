@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   Briefcase, 
   Search, 
@@ -1485,145 +1485,338 @@ const App = () => {
   ];
 
   const renderPage = () => {
-  switch (currentPage) {
-    case 'home':
-      return (
-        <HomePage
-          setPage={setCurrentPage}
-          categories={categories}
-          activeAds={activeAds}
-        />
-      );
-
-    case 'jobs':
-      return (
-        <JobsPage
-          onSelectJob={handleSelectJob}
-          categories={categories}
-          jobs={jobs}
-        />
-      );
-
-    case 'job-details':
-      return selectedJob ? (
-        <JobDetailsPage
-          job={selectedJob}
-          user={user}
-          onBack={() => setCurrentPage('jobs')}
-        />
-      ) : (
-        <JobsPage
-          onSelectJob={handleSelectJob}
-          categories={categories}
-          jobs={jobs}
-        />
-      );
-
-    case 'freelancers':
-      return <FreelancersPage freelancers={freelancers} />;
-
-    case 'post-job':
-      return (
-        <PostJobPage
-          onPost={handlePostJob}
-          categories={categories}
-        />
-      );
-
-    case 'dashboard':
-      return (
-        <DashboardPage
-          user={user}
-          onOpenWorkroom={() => setCurrentPage('workroom')}
-          activeAds={activeAds}
+    switch(currentPage) {
+      case 'home': return <HomePage setPage={setCurrentPage} categories={categories} activeAds={activeAds} />;
+      case 'jobs': return <JobsPage onSelectJob={handleSelectJob} categories={categories} jobs={jobs} />;
+      case 'job-details': return selectedJob ? <JobDetailsPage job={selectedJob} user={user} onBack={() => setCurrentPage('jobs')} /> : <JobsPage onSelectJob={handleSelectJob} categories={categories} jobs={jobs} />;
+      case 'freelancers': return <FreelancersPage freelancers={freelancers} />;
+      case 'dashboard': 
+        return <DashboardPage 
+          user={user} 
+          onOpenWorkroom={() => setCurrentPage('workroom')} 
+          activeAds={activeAds} 
           transactions={transactions}
           onDeposit={openDeposit}
           onWithdraw={openWithdraw}
-        />
-      );
-
-    case 'workroom':
-      return (
-        <WorkroomPage
-          user={user}
-          onBack={() => setCurrentPage('dashboard')}
-          onReleaseFunds={handleReleaseFunds}
-        />
-      );
-
-    case 'admin':
-      return (
-        <AdminPage
-          categories={categories}
-          onAddCategory={(c: string) => setCategories(prev => [...prev, c])}
-          onDeleteCategory={(c: string) => setCategories(prev => prev.filter(x => x !== c))}
-          freelancers={freelancers}
-          onToggleFreelancerStatus={handleToggleFreelancerStatus}
-          ads={activeAds}
-          onAddAd={(ad: Advertisement) => setActiveAds(prev => [...prev, ad])}
-          onDeleteAd={(id: string) => setActiveAds(prev => prev.filter(a => a.id !== id))}
-          onToggleTheme={() => setIsDarkTheme(p => !p)}
-          isDarkTheme={isDarkTheme}
-          jobs={jobs}
-          platformPayment={platformPaymentDetails}
-          onUpdatePlatformPayment={setPlatformPaymentDetails}
-          onMarkJobPaid={handleMarkJobPaid}
-        />
-      );
-
-    default:
-      return (
-        <HomePage
-          setPage={setCurrentPage}
-          categories={categories}
-          activeAds={activeAds}
-        />
-      );
-  }
-};
+        />;
+      case 'post-job': return <PostJobPage onPost={handlePostJob} categories={categories} />;
+      case 'workroom': return <WorkroomPage onBack={() => setCurrentPage('dashboard')} user={user} onReleaseFunds={handleReleaseFunds}/>;
+      case 'admin': 
+        return user.role === UserRole.ADMIN ? (
+          <AdminPage 
+            categories={categories} 
+            onAddCategory={(c: string) => setCategories([...categories, c])} 
+            onDeleteCategory={(c: string) => setCategories(categories.filter(cat => cat !== c))}
+            freelancers={freelancers}
+            onToggleFreelancerStatus={handleToggleFreelancerStatus}
+            ads={activeAds}
+            onAddAd={(ad: Advertisement) => setActiveAds([...activeAds, ad])}
+            onDeleteAd={(id: string) => setActiveAds(activeAds.filter(a => a.id !== id))}
+            onToggleTheme={() => setIsDarkTheme(!isDarkTheme)}
+            isDarkTheme={isDarkTheme}
+            jobs={jobs}
+            platformPayment={platformPaymentDetails}
+            onUpdatePlatformPayment={setPlatformPaymentDetails}
+            onMarkJobPaid={handleMarkJobPaid}
+          />
+        ) : <HomePage setPage={setCurrentPage} categories={categories} activeAds={activeAds} />;
+      default: return <HomePage setPage={setCurrentPage} categories={categories} activeAds={activeAds} />;
+    }
+  };
 
   return (
-  <div className={isDarkTheme ? 'dark bg-slate-900 text-white' : 'bg-slate-50 text-slate-900'}>
-    
-    {/* TOP NAV */}
-    <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <h1
-          className="font-bold text-lg cursor-pointer"
-          onClick={() => setCurrentPage('home')}
-        >
-          Gab Freelancers Dashboard
-        </h1>
+    <div className={`min-h-screen font-sans ${isDarkTheme ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
+      
+      {/* Wallet Modal */}
+      <WalletModal 
+        isOpen={isWalletModalOpen} 
+        onClose={() => setIsWalletModalOpen(false)} 
+        type={walletModalType} 
+        onConfirm={handleWalletAction}
+        platformDetails={platformPaymentDetails}
+      />
 
-        <nav className="hidden md:flex gap-6 text-sm">
-          {navItems.map(item => (
-            <button
-              key={item.id}
-              onClick={() => setCurrentPage(item.id)}
-              className="hover:text-emerald-600 font-medium"
+      {/* Admin Login Modal */}
+      {isAdminLoginOpen && (
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+          <div className="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
+            <button onClick={() => setIsAdminLoginOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><X size={24}/></button>
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 bg-slate-900 text-white rounded-lg flex items-center justify-center mx-auto mb-3">
+                <Lock size={24} />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900">Admin Access</h2>
+              <p className="text-sm text-slate-500">Secure Restricted Area</p>
+            </div>
+            <div className="space-y-4">
+              <input 
+                type="text" 
+                placeholder="Username" 
+                value={adminUsername}
+                onChange={(e) => setAdminUsername(e.target.value)}
+                className="w-full p-3 border border-slate-300 rounded-lg text-slate-900"
+              />
+              <input 
+                type="password" 
+                placeholder="Password" 
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                className="w-full p-3 border border-slate-300 rounded-lg text-slate-900"
+              />
+              <Button onClick={handleAdminLogin} className="w-full py-3">Login</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Freelancer Compliance Modal */}
+      {isComplianceModalOpen && (
+        <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white p-8 rounded-2xl w-full max-w-xl shadow-2xl overflow-y-auto max-h-[90vh]">
+             <div className="flex items-center gap-3 mb-6 text-emerald-700">
+               <FileSignature size={32} />
+               <h2 className="text-2xl font-bold text-slate-900">Freelancer Registration</h2>
+             </div>
+             
+             <div className="space-y-6 text-slate-700">
+               {/* 1. Legal Terms */}
+               <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                 <h3 className="font-bold text-slate-900 mb-2">1. Terms & Standards</h3>
+                 <ul className="text-sm list-disc pl-5 space-y-1 text-slate-600 mb-3">
+                   <li>I accept the <strong>10% Platform Commission Fee</strong>.</li>
+                   <li>I agree to complete tasks honestly and respect client confidentiality.</li>
+                   <li>I understand that violations result in an immediate ban.</li>
+                 </ul>
+                 <div className="flex flex-col gap-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" className="w-4 h-4 text-emerald-600" checked={complianceAgreements.commission} onChange={(e) => setComplianceAgreements(prev => ({...prev, commission: e.target.checked}))} />
+                      <span className="text-sm font-medium">I accept the 10% fee.</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" className="w-4 h-4 text-emerald-600" checked={complianceAgreements.legal} onChange={(e) => setComplianceAgreements(prev => ({...prev, legal: e.target.checked}))} />
+                      <span className="text-sm font-medium">I agree to Legal & Ethical standards.</span>
+                    </label>
+                 </div>
+               </div>
+               
+               {/* 2. Payout Details Form */}
+               <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                  <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
+                    <CreditCard size={16}/> 2. Your Payout Details
+                  </h3>
+                  <p className="text-xs text-blue-800 mb-4">We need this to send your earnings. Please enter your Bank, JazzCash or EasyPaisa details.</p>
+                  
+                  <div className="space-y-3">
+                     <div>
+                       <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Method</label>
+                       <select 
+                         value={payoutForm.method}
+                         onChange={(e) => setPayoutForm({...payoutForm, method: e.target.value as any})}
+                         className="w-full p-2 border border-slate-300 rounded text-sm"
+                       >
+                         <option>Bank Transfer</option>
+                         <option>EasyPaisa</option>
+                         <option>JazzCash</option>
+                       </select>
+                     </div>
+                     {payoutForm.method === 'Bank Transfer' && (
+                       <div>
+                         <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Bank Name</label>
+                         <input 
+                           type="text" 
+                           placeholder="e.g. Meezan Bank"
+                           value={payoutForm.bankName}
+                           onChange={(e) => setPayoutForm({...payoutForm, bankName: e.target.value})}
+                           className="w-full p-2 border border-slate-300 rounded text-sm"
+                         />
+                       </div>
+                     )}
+                     <div>
+                       <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Account Title</label>
+                       <input 
+                         type="text" 
+                         placeholder="e.g. Ahmed Hassan"
+                         value={payoutForm.accountTitle}
+                         onChange={(e) => setPayoutForm({...payoutForm, accountTitle: e.target.value})}
+                         className="w-full p-2 border border-slate-300 rounded text-sm"
+                       />
+                     </div>
+                     <div>
+                       <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Account Number / IBAN</label>
+                       <input 
+                         type="text" 
+                         placeholder="e.g. 03001234567 or PK36MEZN..."
+                         value={payoutForm.accountNumber}
+                         onChange={(e) => setPayoutForm({...payoutForm, accountNumber: e.target.value})}
+                         className="w-full p-2 border border-slate-300 rounded text-sm"
+                       />
+                     </div>
+                  </div>
+               </div>
+
+               <div className="flex gap-3 pt-4">
+                 <Button onClick={handleAcceptCompliance} className="flex-1" disabled={!complianceAgreements.commission || !complianceAgreements.legal}>Complete Registration</Button>
+                 <Button variant="ghost" onClick={() => setIsComplianceModalOpen(false)}>Cancel</Button>
+               </div>
+             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Navigation */}
+      <nav className={`sticky top-0 z-50 border-b shadow-sm ${isDarkTheme ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            
+            {/* Logo - Trigger for Admin Login */}
+            <div 
+              className="flex items-center cursor-pointer group select-none" 
+              onClick={() => setCurrentPage('home')}
+              onDoubleClick={(e) => {
+                e.preventDefault();
+                if (user.role !== UserRole.ADMIN) {
+                   setIsAdminLoginOpen(true);
+                } else {
+                   // Already admin, maybe go to admin dashboard?
+                   setCurrentPage('admin');
+                }
+              }}
             >
-              {item.label}
-            </button>
-          ))}
-        </nav>
-      </div>
-    </header>
+              <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center mr-2 group-hover:bg-emerald-700 transition-colors">
+                <span className="text-white font-bold text-lg">G</span>
+              </div>
+              <span className={`font-bold text-xl tracking-tight ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>GAB <span className="text-emerald-600">Freelancers</span></span>
+            </div>
 
-    {/* PAGE CONTENT */}
-    <main className="min-h-screen">
-      {renderPage()}
-    </main>
+            {/* Desktop Nav */}
+            <div className="hidden md:flex items-center space-x-8">
+              {navItems.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => setCurrentPage(item.id)}
+                  className={`text-sm font-medium transition-colors ${
+                    currentPage === item.id ? 'text-emerald-600' : (isDarkTheme ? 'text-slate-300 hover:text-emerald-500' : 'text-slate-600 hover:text-emerald-600')
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+              {user.role === UserRole.ADMIN && (
+                <button onClick={() => setCurrentPage('admin')} className="text-sm font-bold text-emerald-600 flex items-center gap-1">
+                  <Settings size={14}/> Admin Panel
+                </button>
+              )}
+            </div>
 
-    {/* WALLET MODAL */}
-    <WalletModal
-      isOpen={isWalletModalOpen}
-      onClose={() => setIsWalletModalOpen(false)}
-      type={walletModalType}
-      onConfirm={handleWalletAction}
-      platformDetails={platformPaymentDetails}
-    />
-  </div>
-);
-}
+            {/* Desktop Actions */}
+            <div className="hidden md:flex items-center space-x-4">
+              <button onClick={toggleRole} className="text-xs text-slate-400 hover:text-emerald-600 uppercase font-semibold">
+                Switch Role ({user.role})
+              </button>
+              <div className="h-6 w-px bg-slate-200"></div>
+              {user.role === UserRole.CLIENT && (
+                 <Button onClick={() => setCurrentPage('post-job')} className="py-1.5 text-sm">
+                   <PlusCircle size={16} /> Post a Job
+                 </Button>
+              )}
+              <div className="flex items-center gap-2 cursor-pointer" onClick={() => setCurrentPage('dashboard')}>
+                 <img src={user.avatar} className="w-8 h-8 rounded-full border border-slate-200" alt="Avatar" />
+              </div>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <div className="flex items-center md:hidden">
+              <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-slate-600">
+                {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Nav */}
+        {isMenuOpen && (
+          <div className="md:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-4 space-y-2">
+            {navItems.map(item => (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setCurrentPage(item.id);
+                  setIsMenuOpen(false);
+                }}
+                className="block w-full text-left py-2 text-base font-medium text-slate-600"
+              >
+                {item.label}
+              </button>
+            ))}
+            {user.role === UserRole.ADMIN && (
+              <button onClick={() => { setCurrentPage('admin'); setIsMenuOpen(false); }} className="block w-full text-left py-2 text-base font-bold text-emerald-600">
+                Admin Panel
+              </button>
+            )}
+            <div className="pt-2 border-t border-slate-100">
+              <Button onClick={() => { setCurrentPage('post-job'); setIsMenuOpen(false); }} className="w-full justify-center">
+                Post a Job
+              </Button>
+              <button onClick={() => { toggleRole(); setIsMenuOpen(false); }} className="w-full mt-2 text-sm text-slate-500 py-2">
+                Switch Role ({user.role})
+              </button>
+            </div>
+          </div>
+        )}
+      </nav>
+
+      {/* Main Content Area */}
+      <main className="min-h-[calc(100vh-64px)]">
+        {renderPage()}
+      </main>
+
+      {/* Footer */}
+      <footer className={`${isDarkTheme ? 'bg-slate-950 text-slate-400' : 'bg-slate-900 text-slate-300'} py-12`}>
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 grid md:grid-cols-4 gap-8">
+          <div>
+             <div className="flex items-center mb-4">
+              <div className="w-6 h-6 bg-emerald-500 rounded flex items-center justify-center mr-2">
+                <span className="text-white font-bold text-xs">G</span>
+              </div>
+              <span className="font-bold text-lg text-white">GAB Freelancers</span>
+            </div>
+            <p className="text-sm opacity-70">
+              Pakistan's trusted marketplace. Connecting talent with opportunity through secure local rails.
+            </p>
+          </div>
+          <div>
+            <h4 className="font-bold text-white mb-4">For Freelancers</h4>
+            <ul className="space-y-2 text-sm opacity-70">
+              <li>Find Work</li>
+              <li>Create Profile</li>
+              <li>Success Stories</li>
+              <li>Resources</li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold text-white mb-4">For Clients</h4>
+            <ul className="space-y-2 text-sm opacity-70">
+              <li>Post a Job</li>
+              <li>Find Talent</li>
+              <li>Enterprise Solutions</li>
+              <li>Escrow Protection</li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold text-white mb-4">Payment Partners</h4>
+            <div className="flex gap-2">
+               <div className="bg-white/10 px-2 py-1 rounded text-xs">JazzCash</div>
+               <div className="bg-white/10 px-2 py-1 rounded text-xs">EasyPaisa</div>
+               <div className="bg-white/10 px-2 py-1 rounded text-xs">Raast</div>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 mt-12 pt-8 border-t border-slate-800 text-center text-xs opacity-50">
+          © 2024 GAB Freelancers Pakistan. All rights reserved.
+        </div>
+      </footer>
+    </div>
+  );
 };
+
 export default App;
