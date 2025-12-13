@@ -81,8 +81,8 @@ const MOCK_USER: User = {
 const INITIAL_JOBS: Job[] = [
   {
     id: 'j1',
-    title: 'E-commerce React Developer for Local Brand',
-    description: 'We need an experienced React developer to build a clothing store frontend. Must integrate with JazzCash payment gateway API. The design is ready in Figma.\n\nResponsibilities:\n- Convert Figma designs to React components\n- Integrate JazzCash/EasyPaisa APIs\n- Ensure mobile responsiveness\n\nRequirements:\n- 3+ years React experience\n- Portfolio of e-commerce sites\n- Based in Pakistan for occasional syncs',
+    title: 'E-commerce React Developer',
+    description: 'We need an experienced React developer to build a clothing store frontend. Must integrate with JazzCash payment gateway API.\n\nRequirements:\n- 3+ years React experience\n- Portfolio of e-commerce sites',
     budget: 150000,
     currency: 'PKR',
     postedBy: { ...MOCK_USER, id: 'c1', name: 'Sapphire Textiles', role: UserRole.CLIENT },
@@ -91,12 +91,12 @@ const INITIAL_JOBS: Job[] = [
     type: 'Fixed Price',
     applicants: 12,
     status: 'In Progress',
-    assignedTo: 'f1'
+    assignedTo: 'f1' // Currently active job for demo
   },
   {
     id: 'j2',
     title: 'Urdu Content Writer for Tech Blog',
-    description: 'Looking for a native Urdu speaker who understands technology terms. You will translate and write 5 articles per week about latest gadgets and software.\n\nMust have strong command over Urdu grammar and technical vocabulary.',
+    description: 'Looking for a native Urdu speaker who understands technology terms. You will translate and write 5 articles per week about latest gadgets.',
     budget: 5000,
     currency: 'PKR',
     postedBy: { ...MOCK_USER, id: 'c2', name: 'TechPakistan', role: UserRole.CLIENT },
@@ -108,8 +108,8 @@ const INITIAL_JOBS: Job[] = [
   },
   {
     id: 'j3',
-    title: 'Tax Filing Assistant for Small Business',
-    description: 'Need a certified tax practitioner to help file annual returns for a small software house in Islamabad. Must be familiar with FBR portal and IT export tax exemptions.',
+    title: 'Tax Filing Assistant',
+    description: 'Need a certified tax practitioner to help file annual returns for a small software house in Islamabad.',
     budget: 15000,
     currency: 'PKR',
     postedBy: { ...MOCK_USER, id: 'c3', name: 'SoftSync Solutions', role: UserRole.CLIENT },
@@ -404,7 +404,7 @@ const JobsPage = ({ onSelectJob, categories, jobs }: { onSelectJob: (job: Job) =
   </div>
 );
 
-const JobDetailsPage = ({ job, onBack, user }: { job: Job; onBack: () => void; user: User }) => {
+const JobDetailsPage = ({ job, onBack, user, onApply }: { job: Job; onBack: () => void; user: User; onApply: (jobId: string) => void }) => {
   const [showProposalForm, setShowProposalForm] = useState(false);
   const [bidAmount, setBidAmount] = useState(job.budget.toString());
   const [coverLetter, setCoverLetter] = useState('');
@@ -415,6 +415,7 @@ const JobDetailsPage = ({ job, onBack, user }: { job: Job; onBack: () => void; u
     // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
+      onApply(job.id);
       alert('Proposal submitted successfully! The client will review your bid.');
       onBack();
     }, 1500);
@@ -518,13 +519,13 @@ const JobDetailsPage = ({ job, onBack, user }: { job: Job; onBack: () => void; u
   );
 };
 
-const WorkroomPage = ({ onBack, user, onReleaseFunds }: { onBack: () => void; user: User; onReleaseFunds: () => void }) => {
+const WorkroomPage = ({ onBack, user, onReleaseFunds, job }: { onBack: () => void; user: User; onReleaseFunds: () => void; job?: Job }) => {
   const [messages, setMessages] = useState([
     { id: 1, text: "Hi! Thanks for accepting my proposal. I'm excited to start.", sender: 'freelancer', time: '10:00 AM' },
     { id: 2, text: "Welcome aboard! Here are the Figma files you need.", sender: 'client', time: '10:05 AM', attachment: 'Design_v1.fig' },
   ]);
   const [inputText, setInputText] = useState('');
-  const [isFundsReleased, setIsFundsReleased] = useState(false);
+  const [isFundsReleased, setIsFundsReleased] = useState(job?.status === 'Completed' || job?.status === 'Paid');
 
   const handleSend = () => {
     if (!inputText.trim()) return;
@@ -533,7 +534,7 @@ const WorkroomPage = ({ onBack, user, onReleaseFunds }: { onBack: () => void; us
   };
 
   const handleReleaseClick = () => {
-    if (confirm("Are you sure you want to release PKR 135,000 to the freelancer? This action cannot be undone.")) {
+    if (confirm(`Are you sure you want to release funds for ${job?.title}? This action cannot be undone.`)) {
       onReleaseFunds();
       setIsFundsReleased(true);
       setMessages([...messages, { 
@@ -545,14 +546,20 @@ const WorkroomPage = ({ onBack, user, onReleaseFunds }: { onBack: () => void; us
     }
   }
 
+  if (!job) return <div className="p-8 text-center">Job context missing. <button onClick={onBack} className="text-blue-600 underline">Go Back</button></div>;
+
   return (
     <div className="h-[calc(100vh-80px)] max-w-7xl mx-auto px-4 lg:px-8 py-4 flex gap-6">
       <div className="w-1/3 bg-white border border-slate-200 rounded-xl hidden md:flex flex-col">
-        <div className="p-4 border-b border-slate-100 font-bold text-lg">Active Contracts</div>
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-4 bg-emerald-50 border-l-4 border-emerald-500 cursor-pointer">
-            <h4 className="font-medium text-slate-900">E-commerce React Dev...</h4>
-            <p className="text-xs text-slate-500 mt-1">Sapphire Textiles</p>
+        <div className="p-4 border-b border-slate-100 font-bold text-lg">Contract Details</div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="p-4 bg-emerald-50 border-l-4 border-emerald-500">
+            <h4 className="font-medium text-slate-900">{job.title}</h4>
+            <p className="text-xs text-slate-500 mt-1">Client: {job.postedBy.name}</p>
+            <div className="mt-2 text-sm font-bold text-emerald-700">PKR {job.budget.toLocaleString()}</div>
+          </div>
+          <div className="text-xs text-slate-500 px-2">
+             Status: <span className="font-bold uppercase text-slate-700">{job.status}</span>
           </div>
         </div>
       </div>
@@ -560,8 +567,10 @@ const WorkroomPage = ({ onBack, user, onReleaseFunds }: { onBack: () => void; us
       <div className="flex-1 bg-white border border-slate-200 rounded-xl flex flex-col shadow-sm">
         <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-xl">
            <div>
-             <h3 className="font-bold">E-commerce React Developer</h3>
-             <span className="text-xs text-emerald-600 flex items-center gap-1"><ShieldCheck size={12}/> Escrow Funded: PKR 150,000</span>
+             <h3 className="font-bold truncate max-w-xs sm:max-w-md">{job.title}</h3>
+             <span className="text-xs text-emerald-600 flex items-center gap-1">
+                <ShieldCheck size={12}/> {isFundsReleased ? 'Funds Released' : 'Escrow Funded'}
+             </span>
            </div>
            <div className="flex items-center gap-2">
              {user.role === UserRole.CLIENT && !isFundsReleased && (
@@ -634,7 +643,7 @@ const FreelancersPage = ({ freelancers }: { freelancers: FreelancerProfile[] }) 
   </div>
 );
 
-const PostJobPage = ({ onPost, categories }: { onPost: (job: Job) => void, categories: string[] }) => {
+const PostJobPage = ({ onPost, categories, user }: { onPost: (job: Job) => void, categories: string[], user: User }) => {
   const [title, setTitle] = useState('');
   const [skills, setSkills] = useState('');
   const [description, setDescription] = useState('');
@@ -665,7 +674,7 @@ const PostJobPage = ({ onPost, categories }: { onPost: (job: Job) => void, categ
       description,
       budget: Number(budget),
       currency: 'PKR',
-      postedBy: { ...MOCK_USER, role: UserRole.CLIENT },
+      postedBy: user,
       postedAt: new Date().toISOString(),
       category,
       type: 'Fixed Price',
@@ -760,15 +769,24 @@ const DashboardPage = ({
   activeAds, 
   transactions,
   onDeposit,
-  onWithdraw
+  onWithdraw,
+  jobs
 }: { 
   user: User; 
-  onOpenWorkroom: () => void, 
+  onOpenWorkroom: (job: Job) => void, 
   activeAds: Advertisement[], 
   transactions: Transaction[],
   onDeposit: () => void,
-  onWithdraw: () => void
-}) => (
+  onWithdraw: () => void,
+  jobs: Job[]
+}) => {
+  // Filter jobs relevant to the current user dashboard
+  const activeJobs = jobs.filter(j => 
+    j.status === 'In Progress' && 
+    (j.postedBy.id === user.id || j.assignedTo === 'f1') // Using f1 for demo purposes if user is freelancer
+  );
+
+  return (
   <div className="px-4 lg:px-20 py-8 min-h-screen">
     
     {/* Advertisements for Revenue */}
@@ -858,20 +876,28 @@ const DashboardPage = ({
             <h3 className="font-bold text-slate-900 flex items-center gap-2">
               <Briefcase size={18} className="text-emerald-600"/> Active Contracts
             </h3>
-            <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">1 Active</span>
+            <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">{activeJobs.length} Active</span>
           </div>
-          <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100">
-            <div>
-              <h4 className="font-medium text-slate-900">E-commerce React Developer</h4>
-              <p className="text-sm text-slate-500">Sapphire Textiles • Due in 5 days</p>
-            </div>
-            <Button variant="primary" className="text-sm py-1" onClick={onOpenWorkroom}>Enter Workroom</Button>
+          <div className="space-y-3">
+            {activeJobs.length === 0 ? (
+              <p className="text-sm text-slate-500 italic">No active contracts found.</p>
+            ) : (
+              activeJobs.map(job => (
+                <div key={job.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100">
+                  <div>
+                    <h4 className="font-medium text-slate-900">{job.title}</h4>
+                    <p className="text-sm text-slate-500">{user.role === 'CLIENT' ? 'Freelancer Assigned' : `Client: ${job.postedBy.name}`}</p>
+                  </div>
+                  <Button variant="primary" className="text-sm py-1" onClick={() => onOpenWorkroom(job)}>Enter Workroom</Button>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
         {/* Stats Chart */}
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <h3 className="font-bold mb-6">Earnings Overview (PKR)</h3>
+          <h3 className="font-bold mb-6">{user.role === UserRole.CLIENT ? 'Spending Overview' : 'Earnings Overview'} (PKR)</h3>
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={MOCK_EARNINGS}>
@@ -917,7 +943,8 @@ const DashboardPage = ({
       </div>
     </div>
   </div>
-);
+  );
+};
 
 const AdminPage = ({ 
   categories, 
@@ -1317,6 +1344,7 @@ const App = () => {
   const [categories, setCategories] = useState(INITIAL_CATEGORIES);
   const [transactions, setTransactions] = useState(INITIAL_TRANSACTIONS);
   const [jobs, setJobs] = useState<Job[]>(INITIAL_JOBS);
+  const [activeWorkroomJob, setActiveWorkroomJob] = useState<Job | undefined>(undefined);
   
   // New States for Admin features
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
@@ -1405,6 +1433,12 @@ const App = () => {
     setCurrentPage('job-details');
   };
 
+  const handleApplyJob = (jobId: string) => {
+    setJobs(prev => prev.map(job => 
+      job.id === jobId ? { ...job, applicants: job.applicants + 1 } : job
+    ));
+  };
+
   const handlePostJob = (newJob: Job) => {
     setJobs([newJob, ...jobs]);
     setCurrentPage('jobs');
@@ -1445,10 +1479,12 @@ const App = () => {
 
   const handleReleaseFunds = () => {
     // 1. Log Transaction for current user (Client view)
+    if (!activeWorkroomJob) return;
+
     const newTx: Transaction = {
         id: Date.now().toString(),
         date: new Date().toISOString().split('T')[0],
-        amount: 150000,
+        amount: activeWorkroomJob.budget,
         type: 'Payment',
         method: 'Bank Transfer', // internal
         status: 'Completed'
@@ -1456,16 +1492,9 @@ const App = () => {
     setTransactions(prev => [newTx, ...prev]);
 
     // 2. Update Job Status to Completed
-    if (currentPage === 'workroom') {
-       // In workroom we assume we know which job it is. For demo, we'll update the first 'In Progress' one or mock logic
-       // Finding the job associated with the workroom
-       const jobIndex = jobs.findIndex(j => j.status === 'In Progress');
-       if (jobIndex !== -1) {
-          const updatedJobs = [...jobs];
-          updatedJobs[jobIndex].status = 'Completed';
-          setJobs(updatedJobs);
-       }
-    }
+    setJobs(prev => prev.map(j => j.id === activeWorkroomJob.id ? { ...j, status: 'Completed' } : j));
+    // Also update local reference to reflect in UI immediately
+    setActiveWorkroomJob(prev => prev ? { ...prev, status: 'Completed' } : undefined);
   };
   
   const handleMarkJobPaid = (jobId: string) => {
@@ -1477,6 +1506,10 @@ const App = () => {
   const openDeposit = () => { setWalletModalType('Deposit'); setIsWalletModalOpen(true); };
   const openWithdraw = () => { setWalletModalType('Withdrawal'); setIsWalletModalOpen(true); };
 
+  const handleOpenWorkroom = (job: Job) => {
+    setActiveWorkroomJob(job);
+    setCurrentPage('workroom');
+  }
 
   const navItems = [
     { id: 'jobs', label: 'Find Work' },
@@ -1488,19 +1521,20 @@ const App = () => {
     switch(currentPage) {
       case 'home': return <HomePage setPage={setCurrentPage} categories={categories} activeAds={activeAds} />;
       case 'jobs': return <JobsPage onSelectJob={handleSelectJob} categories={categories} jobs={jobs} />;
-      case 'job-details': return selectedJob ? <JobDetailsPage job={selectedJob} user={user} onBack={() => setCurrentPage('jobs')} /> : <JobsPage onSelectJob={handleSelectJob} categories={categories} jobs={jobs} />;
+      case 'job-details': return selectedJob ? <JobDetailsPage job={selectedJob} user={user} onBack={() => setCurrentPage('jobs')} onApply={handleApplyJob} /> : <JobsPage onSelectJob={handleSelectJob} categories={categories} jobs={jobs} />;
       case 'freelancers': return <FreelancersPage freelancers={freelancers} />;
       case 'dashboard': 
         return <DashboardPage 
           user={user} 
-          onOpenWorkroom={() => setCurrentPage('workroom')} 
+          onOpenWorkroom={handleOpenWorkroom} 
           activeAds={activeAds} 
           transactions={transactions}
           onDeposit={openDeposit}
           onWithdraw={openWithdraw}
+          jobs={jobs}
         />;
-      case 'post-job': return <PostJobPage onPost={handlePostJob} categories={categories} />;
-      case 'workroom': return <WorkroomPage onBack={() => setCurrentPage('dashboard')} user={user} onReleaseFunds={handleReleaseFunds}/>;
+      case 'post-job': return <PostJobPage onPost={handlePostJob} categories={categories} user={user} />;
+      case 'workroom': return <WorkroomPage onBack={() => setCurrentPage('dashboard')} user={user} onReleaseFunds={handleReleaseFunds} job={activeWorkroomJob} />;
       case 'admin': 
         return user.role === UserRole.ADMIN ? (
           <AdminPage 
