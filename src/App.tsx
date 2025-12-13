@@ -1305,7 +1305,7 @@ const AdminPage = ({
 
     </div>
   )
-}
+};
 
 // --- Main App Component ---
 
