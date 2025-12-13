@@ -1,19 +1,20 @@
 import { GoogleGenAI } from "@google/genai";
 
-// Access the API key injected by Vite. 
-// We use a safe check because 'process' might not exist in the browser runtime.
-const apiKey = process.env.API_KEY || '';
-
-// Initialize AI only if key exists to prevent immediate crash, though it will fail on generation
-const ai = new GoogleGenAI({ apiKey });
+// Lazy initialization function
+const getAiClient = () => {
+  const apiKey = process.env.API_KEY || '';
+  return new GoogleGenAI({ apiKey });
+};
 
 export const generateJobDescription = async (title: string, skills: string): Promise<string> => {
-  if (!apiKey) {
+  // Check apiKey presence safely
+  if (!process.env.API_KEY) {
     console.warn("API Key is missing. Returning mock description.");
     return `[Mock AI Response] Job Title: ${title}\n\nWe are looking for a skilled professional with experience in ${skills}.\n\nResponsibilities:\n- Deliver high quality work\n- Communicate effectively\n- Meet deadlines\n\nRequirements:\n- Proven track record\n- Strong portfolio\n\nPlease apply with your recent work samples.`;
   }
 
   try {
+    const ai = getAiClient();
     const prompt = `
       You are an expert HR consultant for a Pakistani freelancing platform called "GAB Freelancers".
       Write a professional, encouraging, and clear job description for a gig with the title: "${title}".
