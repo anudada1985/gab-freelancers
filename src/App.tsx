@@ -1487,10 +1487,22 @@ const App = () => {
   const renderPage = () => {
   switch (currentPage) {
     case 'home':
-      return <HomePage setPage={setCurrentPage} categories={categories} activeAds={activeAds} />;
+      return (
+        <HomePage
+          setPage={setCurrentPage}
+          categories={categories}
+          activeAds={activeAds}
+        />
+      );
 
     case 'jobs':
-      return <JobsPage onSelectJob={handleSelectJob} categories={categories} jobs={jobs} />;
+      return (
+        <JobsPage
+          onSelectJob={handleSelectJob}
+          categories={categories}
+          jobs={jobs}
+        />
+      );
 
     case 'job-details':
       return selectedJob ? (
@@ -1500,11 +1512,23 @@ const App = () => {
           onBack={() => setCurrentPage('jobs')}
         />
       ) : (
-        <JobsPage onSelectJob={handleSelectJob} categories={categories} jobs={jobs} />
+        <JobsPage
+          onSelectJob={handleSelectJob}
+          categories={categories}
+          jobs={jobs}
+        />
       );
 
     case 'freelancers':
       return <FreelancersPage freelancers={freelancers} />;
+
+    case 'post-job':
+      return (
+        <PostJobPage
+          onPost={handlePostJob}
+          categories={categories}
+        />
+      );
 
     case 'dashboard':
       return (
@@ -1531,17 +1555,13 @@ const App = () => {
       return (
         <AdminPage
           categories={categories}
-          onAddCategory={(cat: string) => setCategories(prev => [...prev, cat])}
-          onDeleteCategory={(cat: string) =>
-            setCategories(prev => prev.filter(c => c !== cat))
-          }
+          onAddCategory={(c: string) => setCategories(prev => [...prev, c])}
+          onDeleteCategory={(c: string) => setCategories(prev => prev.filter(x => x !== c))}
           freelancers={freelancers}
           onToggleFreelancerStatus={handleToggleFreelancerStatus}
           ads={activeAds}
           onAddAd={(ad: Advertisement) => setActiveAds(prev => [...prev, ad])}
-          onDeleteAd={(id: string) =>
-            setActiveAds(prev => prev.filter(a => a.id !== id))
-          }
+          onDeleteAd={(id: string) => setActiveAds(prev => prev.filter(a => a.id !== id))}
           onToggleTheme={() => setIsDarkTheme(p => !p)}
           isDarkTheme={isDarkTheme}
           jobs={jobs}
@@ -1552,14 +1572,49 @@ const App = () => {
       );
 
     default:
-      return <HomePage setPage={setCurrentPage} categories={categories} activeAds={activeAds} />;
+      return (
+        <HomePage
+          setPage={setCurrentPage}
+          categories={categories}
+          activeAds={activeAds}
+        />
+      );
   }
 };
 
   return (
-  <div className={isDarkTheme ? 'dark bg-slate-900 text-white' : 'bg-slate-50'}>
-    {renderPage()}
+  <div className={isDarkTheme ? 'dark bg-slate-900 text-white' : 'bg-slate-50 text-slate-900'}>
+    
+    {/* TOP NAV */}
+    <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
+      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+        <h1
+          className="font-bold text-lg cursor-pointer"
+          onClick={() => setCurrentPage('home')}
+        >
+          Gab Freelancers Dashboard
+        </h1>
 
+        <nav className="hidden md:flex gap-6 text-sm">
+          {navItems.map(item => (
+            <button
+              key={item.id}
+              onClick={() => setCurrentPage(item.id)}
+              className="hover:text-emerald-600 font-medium"
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
+      </div>
+    </header>
+
+    {/* PAGE CONTENT */}
+    <main className="min-h-screen">
+      {renderPage()}
+    </main>
+
+    {/* WALLET MODAL */}
     <WalletModal
       isOpen={isWalletModalOpen}
       onClose={() => setIsWalletModalOpen(false)}
