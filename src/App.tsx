@@ -37,7 +37,9 @@ import {
   BookOpen,
   Award,
   Globe,
-  Shield
+  Shield,
+  Edit3,
+  Save
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -70,7 +72,7 @@ const INITIAL_PLATFORM_PAYMENT: PlatformPaymentDetails = {
   jazzCashNumber: '0300-7654321'
 };
 
-const MOCK_USERS: User[] = [
+const INITIAL_USERS: User[] = [
   {
     id: 'u1',
     name: 'Ahmed Hassan',
@@ -83,9 +85,9 @@ const MOCK_USERS: User[] = [
     status: 'Active',
     agreedToTerms: true,
     title: 'Senior React Developer',
-    bio: 'Experienced developer specializing in React and Node.js.',
+    bio: 'Experienced developer specializing in React and Node.js. I have built over 20+ e-commerce applications for local and international clients.',
     hourlyRate: 3500,
-    skills: ['React', 'Node.js', 'Typescript'],
+    skills: ['React', 'Node.js', 'Typescript', 'Next.js'],
     rating: 4.8,
     jobsCompleted: 15,
     payoutDetails: {
@@ -112,16 +114,17 @@ const MOCK_USERS: User[] = [
 const INITIAL_JOBS: Job[] = [
   {
     id: 'j1',
-    title: 'E-commerce React Developer',
-    description: 'We need an experienced React developer to build a clothing store frontend. Must integrate with JazzCash payment gateway API.\n\nRequirements:\n- 3+ years React experience\n- Portfolio of e-commerce sites',
+    title: 'E-commerce React Developer for Local Brand',
+    description: 'We need an experienced React developer to build a clothing store frontend. Must integrate with JazzCash payment gateway API. The design is ready in Figma.\n\nResponsibilities:\n- Convert Figma designs to React components\n- Integrate JazzCash/EasyPaisa APIs\n- Ensure mobile responsiveness\n\nRequirements:\n- 3+ years React experience\n- Portfolio of e-commerce sites\n- Based in Pakistan for occasional syncs',
     budget: 150000,
     currency: 'PKR',
-    postedBy: MOCK_USERS[1],
+    postedBy: INITIAL_USERS[1],
     postedAt: new Date().toISOString(),
     category: 'Web Development',
     type: 'Fixed Price',
-    applicants: 0,
-    status: 'Open',
+    applicants: 12,
+    status: 'In Progress',
+    assignedTo: 'u1'
   }
 ];
 
@@ -131,18 +134,16 @@ const INITIAL_TRANSACTIONS: Transaction[] = [
 
 // --- Authentication Components ---
 
-const AuthPage = ({ onLogin, onRegister }: { onLogin: (u: User) => void, onRegister: () => void }) => {
+const AuthPage = ({ onLogin, onRegister, users }: { onLogin: (u: User) => void, onRegister: () => void, users: User[] }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleLogin = () => {
-    // Simple mock authentication
-    const user = MOCK_USERS.find(u => u.email === email && u.password === password);
+    const user = users.find(u => u.email === email && u.password === password);
     if (user) {
       onLogin(user);
     } else {
-      // Allow admin login backdoor
       if (email === 'Ansar' && password === 'Anudada@007') {
          const adminUser: User = {
            id: 'admin1',
@@ -260,8 +261,6 @@ const RegisterPage = ({ onRegisterComplete, onBack }: { onRegisterComplete: (u: 
       jobsCompleted: 0
     };
 
-    // In a real app, this would be an API call
-    MOCK_USERS.push(newUser);
     onRegisterComplete(newUser);
   };
 
@@ -462,12 +461,12 @@ const ContentPage = ({ title, content, onBack }: { title: string, content: React
 
 // --- Main Pages ---
 
-const HomePage = ({ setPage, categories, activeAds }: any) => (
+const HomePage = ({ setPage, categories, activeAds }: { setPage: (p: string) => void, categories: string[], activeAds: Advertisement[] }) => (
   <div className="space-y-16 pb-12">
     {/* Admin Ads Section */}
     {activeAds.length > 0 && (
       <div className="mx-4 lg:mx-20 mt-6 grid gap-4">
-        {activeAds.map((ad: Advertisement) => (
+        {activeAds.map(ad => (
           <div key={ad.id} className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start gap-3 shadow-sm">
             <Megaphone className="text-amber-600 shrink-0 mt-1" size={20} />
             <div>
@@ -503,7 +502,7 @@ const HomePage = ({ setPage, categories, activeAds }: any) => (
         <button onClick={() => setPage('jobs')} className="text-emerald-600 font-medium hover:underline">View All</button>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {categories.slice(0, 10).map((cat: string) => (
+        {categories.slice(0, 10).map((cat) => (
           <div key={cat} onClick={() => setPage('jobs')} className="p-6 bg-white border border-slate-200 rounded-xl hover:border-emerald-500 hover:shadow-md cursor-pointer transition-all text-center group">
             <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
               <Briefcase size={20} />
@@ -513,6 +512,68 @@ const HomePage = ({ setPage, categories, activeAds }: any) => (
         ))}
       </div>
     </section>
+
+    {/* Featured Jobs */}
+    <section className="px-6 lg:px-20 bg-emerald-50/50 py-16 -mx-4 lg:-mx-20">
+      <div className="max-w-7xl mx-auto px-6 lg:px-20">
+        <div className="flex justify-between items-end mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900">Featured Jobs</h2>
+            <p className="text-slate-600">Top opportunities for you today</p>
+          </div>
+          <button onClick={() => setPage('jobs')} className="text-emerald-600 font-medium hover:underline">View All</button>
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* We assume there are jobs passed from parent, simplified here for display */}
+          <div className="p-6 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-400">
+             (See Jobs Page for Live Listings)
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+);
+
+const JobsPage = ({ onSelectJob, categories, jobs }: { onSelectJob: (job: Job) => void, categories: string[], jobs: Job[] }) => (
+  <div className="px-4 lg:px-20 py-8">
+    <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+      <h1 className="text-2xl font-bold">Browse Jobs</h1>
+      <div className="relative w-full md:w-96">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+        <input 
+          type="text" 
+          placeholder="Search jobs, skills, companies..." 
+          className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+        />
+      </div>
+    </div>
+    
+    <div className="grid lg:grid-cols-4 gap-8">
+      {/* Filters Sidebar */}
+      <div className="hidden lg:block space-y-6">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <h3 className="font-bold mb-3">Categories</h3>
+          <div className="space-y-2 max-h-[400px] overflow-y-auto">
+            {categories.map(cat => (
+              <label key={cat} className="flex items-center gap-2 text-slate-600 cursor-pointer hover:text-emerald-600 text-sm">
+                <input type="checkbox" className="rounded text-emerald-600 focus:ring-emerald-500" />
+                {cat}
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Job List */}
+      <div className="lg:col-span-3 space-y-4">
+        {jobs.map(job => (
+          <JobCard key={job.id} job={job} onClick={() => onSelectJob(job)} />
+        ))}
+        {jobs.length === 0 && (
+          <div className="text-center py-12 text-slate-500">No jobs available. Be the first to post one!</div>
+        )}
+      </div>
+    </div>
   </div>
 );
 
@@ -903,22 +964,139 @@ const PostJobPage = ({ onPost, categories, user }: { onPost: (job: Job) => void,
   );
 };
 
+const ProfilePage = ({ user, onSave, onBack }: { user: User, onSave: (u: User) => void, onBack: () => void }) => {
+  const [formData, setFormData] = useState(user);
+  
+  const handleSave = () => {
+    onSave(formData);
+    alert('Profile updated successfully!');
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto px-6 py-12">
+      <button onClick={onBack} className="flex items-center text-slate-500 hover:text-emerald-600 mb-6">
+        <ChevronLeft size={18} className="mr-1" /> Back to Dashboard
+      </button>
+      
+      <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+        <h1 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+          <UserCircle size={24} className="text-emerald-600"/> Edit Profile
+        </h1>
+        
+        <div className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+              <input 
+                value={formData.name} 
+                onChange={e => setFormData({...formData, name: e.target.value})}
+                className="w-full p-3 border border-slate-300 rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Email (Read Only)</label>
+              <input 
+                value={formData.email} 
+                disabled
+                className="w-full p-3 border border-slate-300 rounded-lg bg-slate-50 text-slate-500"
+              />
+            </div>
+          </div>
+
+          {user.role === UserRole.FREELANCER && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Professional Title</label>
+                <input 
+                  value={formData.title || ''} 
+                  onChange={e => setFormData({...formData, title: e.target.value})}
+                  className="w-full p-3 border border-slate-300 rounded-lg"
+                  placeholder="e.g. Senior React Developer"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Bio</label>
+                <textarea 
+                  rows={4}
+                  value={formData.bio || ''} 
+                  onChange={e => setFormData({...formData, bio: e.target.value})}
+                  className="w-full p-3 border border-slate-300 rounded-lg"
+                  placeholder="Tell clients about yourself..."
+                />
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Hourly Rate (PKR)</label>
+                  <input 
+                    type="number"
+                    value={formData.hourlyRate || ''} 
+                    onChange={e => setFormData({...formData, hourlyRate: Number(e.target.value)})}
+                    className="w-full p-3 border border-slate-300 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Skills (Comma separated)</label>
+                  <input 
+                    value={formData.skills?.join(', ') || ''} 
+                    onChange={e => setFormData({...formData, skills: e.target.value.split(',').map(s => s.trim())})}
+                    className="w-full p-3 border border-slate-300 rounded-lg"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          <div className="pt-4 flex gap-4">
+            <Button onClick={handleSave} className="px-8"><Save size={18}/> Save Changes</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // --- App Root ---
 
 const App = () => {
-  const [currentPage, setCurrentPage] = useState('auth'); // Start at Auth
+  const [currentPage, setCurrentPage] = useState('auth'); 
   const [user, setUser] = useState<User | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   
-  // Data State
-  const [categories, setCategories] = useState(INITIAL_CATEGORIES);
-  const [transactions, setTransactions] = useState(INITIAL_TRANSACTIONS);
-  const [jobs, setJobs] = useState<Job[]>(INITIAL_JOBS);
+  // Data State - Persistence
+  const [users, setUsers] = useState<User[]>(() => {
+    const saved = localStorage.getItem('gab_users');
+    return saved ? JSON.parse(saved) : INITIAL_USERS;
+  });
+  const [jobs, setJobs] = useState<Job[]>(() => {
+    const saved = localStorage.getItem('gab_jobs');
+    return saved ? JSON.parse(saved) : INITIAL_JOBS;
+  });
+  const [proposals, setProposals] = useState<Proposal[]>(() => {
+    const saved = localStorage.getItem('gab_proposals');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [transactions, setTransactions] = useState<Transaction[]>(INITIAL_TRANSACTIONS);
+  
+  // Derived State
+  const freelancers: FreelancerProfile[] = users
+    .filter(u => u.role === UserRole.FREELANCER)
+    .map(u => ({
+      id: `f_${u.id}`,
+      user: u,
+      title: u.title || '',
+      bio: u.bio || '',
+      hourlyRate: u.hourlyRate || 0,
+      skills: u.skills || [],
+      rating: u.rating || 0,
+      jobsCompleted: u.jobsCompleted || 0,
+      totalEarned: 0
+    }));
+
   const [activeWorkroomJob, setActiveWorkroomJob] = useState<Job | undefined>(undefined);
   const [activeAds, setActiveAds] = useState<Advertisement[]>([]);
-  const [freelancers, setFreelancers] = useState<FreelancerProfile[]>([]);
-  const [proposals, setProposals] = useState<Proposal[]>([]);
   
   // UI State
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
@@ -927,53 +1105,44 @@ const App = () => {
   const [platformPaymentDetails, setPlatformPaymentDetails] = useState(INITIAL_PLATFORM_PAYMENT);
   const [registerMode, setRegisterMode] = useState(false);
 
-  // Sync freelancers from Users on init
-  useEffect(() => {
-    const profiles: FreelancerProfile[] = MOCK_USERS
-      .filter(u => u.role === UserRole.FREELANCER)
-      .map(u => ({
-        id: `f_${u.id}`,
-        user: u,
-        title: u.title || '',
-        bio: u.bio || '',
-        hourlyRate: u.hourlyRate || 0,
-        skills: u.skills || [],
-        rating: u.rating || 0,
-        jobsCompleted: u.jobsCompleted || 0,
-        totalEarned: 0
-      }));
-    setFreelancers(profiles);
-  }, []);
+  // Persistence Effects
+  useEffect(() => { localStorage.setItem('gab_users', JSON.stringify(users)); }, [users]);
+  useEffect(() => { localStorage.setItem('gab_jobs', JSON.stringify(jobs)); }, [jobs]);
+  useEffect(() => { localStorage.setItem('gab_proposals', JSON.stringify(proposals)); }, [proposals]);
 
-  // --- Auth Handlers ---
+  // Sync current user if updated in list
+  useEffect(() => {
+    if (user) {
+      const updatedUser = users.find(u => u.id === user.id);
+      if (updatedUser) setUser(updatedUser);
+    }
+  }, [users]);
+
+  // --- Handlers ---
   const handleLogin = (u: User) => {
     setUser(u);
     setCurrentPage('home');
   };
 
   const handleRegisterComplete = (newUser: User) => {
+    setUsers([...users, newUser]);
     setUser(newUser);
-    if (newUser.role === UserRole.FREELANCER) {
-      setFreelancers(prev => [...prev, {
-        id: `f_${newUser.id}`,
-        user: newUser,
-        title: newUser.title || '',
-        bio: newUser.bio || '',
-        hourlyRate: newUser.hourlyRate || 0,
-        skills: newUser.skills || [],
-        rating: 0,
-        jobsCompleted: 0,
-        totalEarned: 0
-      }]);
-    }
     setCurrentPage('home');
     setRegisterMode(false);
   };
 
-  // --- Job Flow Handlers ---
+  const handleUpdateProfile = (updatedUser: User) => {
+    setUsers(users.map(u => u.id === updatedUser.id ? updatedUser : u));
+    setUser(updatedUser);
+  };
+
+  const handlePostJob = (newJob: Job) => {
+    setJobs([newJob, ...jobs]);
+    setCurrentPage('jobs');
+  };
+
   const handleApplyJob = (jobId: string, bid: number, cover: string) => {
     if (!user) return;
-    
     const newProposal: Proposal = {
       id: Date.now().toString(),
       jobId,
@@ -984,7 +1153,6 @@ const App = () => {
       submittedAt: new Date().toISOString(),
       status: 'Pending'
     };
-    
     setProposals([...proposals, newProposal]);
     setJobs(jobs.map(j => j.id === jobId ? { ...j, applicants: j.applicants + 1 } : j));
   };
@@ -1001,100 +1169,79 @@ const App = () => {
     }
 
     // Deduct from Client
-    setUser({ ...user, balance: user.balance - proposal.bidAmount });
+    const updatedClient = { ...user, balance: user.balance - proposal.bidAmount };
+    setUsers(users.map(u => u.id === user.id ? updatedClient : u));
+    setUser(updatedClient);
     
-    // Update Job
     setJobs(jobs.map(j => j.id === job.id ? { 
       ...j, 
       status: 'In Progress', 
       assignedTo: proposal.freelancerId,
-      budget: proposal.bidAmount // Update budget to agreed bid
+      budget: proposal.bidAmount
     } : j));
 
-    // Update Proposal Status
     setProposals(proposals.map(p => p.id === proposal.id ? { ...p, status: 'Accepted' } : p));
 
     alert("Hired successfully! Funds moved to Escrow.");
     setCurrentPage('dashboard');
   };
 
-  const handlePostJob = (newJob: Job) => {
-    setJobs([newJob, ...jobs]);
-    setCurrentPage('jobs');
-  };
-
-  // --- Payment Handlers ---
   const handleWalletAction = (amount: number, method: string) => {
     if (!user) return;
+    let newBalance = user.balance;
     if (walletModalType === 'Deposit') {
-      setUser({ ...user, balance: user.balance + amount });
-      const newTx: Transaction = {
-        id: Date.now().toString(),
-        date: new Date().toISOString().split('T')[0],
-        amount,
-        type: 'Deposit',
-        method: method as any,
-        status: 'Completed'
-      };
-      setTransactions([newTx, ...transactions]);
+      newBalance += amount;
     } else {
-      if (user.balance >= amount) {
-        setUser({ ...user, balance: user.balance - amount });
-        const newTx: Transaction = {
-          id: Date.now().toString(),
-          date: new Date().toISOString().split('T')[0],
-          amount,
-          type: 'Withdrawal',
-          method: method as any,
-          status: 'Completed'
-        };
-        setTransactions([newTx, ...transactions]);
-      } else {
-        alert("Insufficient balance.");
-      }
+      if (user.balance < amount) { alert("Insufficient balance."); return; }
+      newBalance -= amount;
     }
+    
+    const updatedUser = { ...user, balance: newBalance };
+    setUsers(users.map(u => u.id === user.id ? updatedUser : u));
+    setUser(updatedUser);
+
+    const newTx: Transaction = {
+      id: Date.now().toString(),
+      date: new Date().toISOString().split('T')[0],
+      amount,
+      type: walletModalType,
+      method: method as any,
+      status: 'Completed'
+    };
+    setTransactions([newTx, ...transactions]);
+    setIsWalletModalOpen(false);
   };
 
   const handleReleaseFunds = () => {
     if (!activeWorkroomJob) return;
-    
-    // Logic: Funds were already deducted from client during 'Hire'.
-    // Now we simulate sending them to freelancer (in real app, db update).
-    // For this UI demo, we just mark job complete.
-    
     setJobs(jobs.map(j => j.id === activeWorkroomJob.id ? { ...j, status: 'Completed' } : j));
     setActiveWorkroomJob({ ...activeWorkroomJob, status: 'Completed' });
-    
-    // If current user is the freelancer receiving money (just simulation update)
-    // In real app, this happens on backend.
   };
 
-  // --- Navigation & Views ---
+  // --- Views ---
 
   if (!user || currentPage === 'auth') {
     return registerMode ? (
       <RegisterPage onRegisterComplete={handleRegisterComplete} onBack={() => setRegisterMode(false)} />
     ) : (
-      <AuthPage onLogin={handleLogin} onRegister={() => setRegisterMode(true)} />
+      <AuthPage onLogin={handleLogin} onRegister={() => setRegisterMode(true)} users={users} />
     );
   }
 
   const renderPage = () => {
     switch(currentPage) {
-      case 'home': return <HomePage setPage={setCurrentPage} categories={categories} activeAds={activeAds} />;
+      case 'home': return <HomePage setPage={setCurrentPage} categories={INITIAL_CATEGORIES} activeAds={activeAds} />;
       case 'jobs': return (
         <div className="px-4 lg:px-20 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
             <h1 className="text-2xl font-bold">Browse Jobs</h1>
-            <div className="relative w-full md:w-96">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input type="text" placeholder="Search jobs..." className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg" />
-            </div>
+            <Button onClick={() => setCurrentPage('post-job')} className="md:hidden w-full">Post Job</Button>
           </div>
           <div className="grid lg:grid-cols-1 gap-4">
             {jobs.map(job => (
               <JobCard key={job.id} job={job} onClick={() => { setSelectedJob(job); setCurrentPage('job-details'); }} />
             ))}
+            {jobs.length === 0 && <p className="text-slate-500 text-center py-10">No jobs posted yet.</p>}
           </div>
         </div>
       );
@@ -1108,7 +1255,14 @@ const App = () => {
           onHire={handleHire}
         />
       ) : null;
-      case 'freelancers': return <FreelancerCard profile={freelancers[0]} />; // Simple Demo
+      case 'freelancers': return (
+        <div className="px-4 lg:px-20 py-8">
+          <h1 className="text-2xl font-bold mb-8">Hire Top Talent</h1>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {freelancers.map(p => <FreelancerCard key={p.id} profile={p} />)}
+          </div>
+        </div>
+      );
       case 'dashboard': return (
         <div className="px-4 lg:px-20 py-8 min-h-screen">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -1118,16 +1272,20 @@ const App = () => {
                 <h2 className="text-xl font-bold">{user.name}</h2>
                 <p className="text-slate-500 mb-2">{user.role}</p>
                 {user.verified && <div className="flex justify-center mb-4"><VerificationBadge /></div>}
+                
+                <Button variant="outline" className="w-full mb-4 text-xs" onClick={() => setCurrentPage('profile')}>
+                  <Edit3 size={14}/> Edit Profile
+                </Button>
+
                 <div className="border-t border-slate-100 pt-4">
                   <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Available Balance</p>
                   <div className="flex items-center justify-center gap-2 mb-2">
                      <p className="text-2xl font-bold text-emerald-600">PKR {user.balance.toLocaleString()}</p>
                   </div>
-                  {user.role === UserRole.CLIENT ? (
-                    <Button onClick={() => { setWalletModalType('Deposit'); setIsWalletModalOpen(true); }} className="w-full text-sm bg-slate-900">Add Funds</Button>
-                  ) : (
-                    <Button onClick={() => { setWalletModalType('Withdrawal'); setIsWalletModalOpen(true); }} className="w-full text-sm">Withdraw Funds</Button>
-                  )}
+                  <div className="flex gap-2">
+                    <Button onClick={() => { setWalletModalType('Deposit'); setIsWalletModalOpen(true); }} className="flex-1 text-xs bg-slate-900">Add</Button>
+                    <Button onClick={() => { setWalletModalType('Withdrawal'); setIsWalletModalOpen(true); }} className="flex-1 text-xs" variant="secondary">Withdraw</Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1154,40 +1312,42 @@ const App = () => {
                   <h3 className="font-bold mb-4">My Proposals</h3>
                   {proposals.filter(p => p.freelancerId === user.id).map(p => (
                     <div key={p.id} className="border-b py-2 last:border-0 flex justify-between">
-                      <span className="text-sm">{jobs.find(j => j.id === p.jobId)?.title}</span>
+                      <span className="text-sm">{jobs.find(j => j.id === p.jobId)?.title || 'Unknown Job'}</span>
                       <span className={`text-xs px-2 py-1 rounded ${p.status === 'Accepted' ? 'bg-green-100 text-green-700' : 'bg-gray-100'}`}>{p.status}</span>
                     </div>
                   ))}
+                  {proposals.filter(p => p.freelancerId === user.id).length === 0 && <p className="text-slate-400 text-sm">No proposals sent.</p>}
                 </div>
               )}
             </div>
           </div>
         </div>
       );
-      case 'post-job': return <PostJobPage onPost={handlePostJob} categories={categories} user={user} />;
+      case 'profile': return <ProfilePage user={user} onSave={handleUpdateProfile} onBack={() => setCurrentPage('dashboard')} />;
+      case 'post-job': return <PostJobPage onPost={handlePostJob} categories={INITIAL_CATEGORIES} user={user} />;
       case 'workroom': return <WorkroomPage onBack={() => setCurrentPage('dashboard')} user={user} onReleaseFunds={handleReleaseFunds} job={activeWorkroomJob} />;
       
       // -- Content Pages --
       case 'success-stories': return (
         <ContentPage 
-          title="Success Stories" 
+          title="Success Stories from Pakistan" 
           onBack={() => setCurrentPage('home')}
           content={
             <div className="space-y-8">
-              <div className="flex gap-4">
+              <div className="flex gap-6 items-start p-6 bg-slate-50 rounded-xl border border-slate-100">
                 <img src="https://picsum.photos/seed/succ1/100/100" className="w-24 h-24 rounded-xl object-cover" />
                 <div>
                   <h3 className="text-xl font-bold text-slate-900">Ali's Journey to Top Rated</h3>
                   <p className="text-emerald-600 font-medium mb-2">Web Developer • Earned 5 Million+ PKR</p>
-                  <p>"GAB Freelancers gave me the platform to showcase my skills to local businesses. The local payment integration made it so easy to receive funds directly into my JazzCash."</p>
+                  <p className="italic text-slate-600">"GAB Freelancers gave me the platform to showcase my skills to local businesses. The local payment integration made it so easy to receive funds directly into my JazzCash without worrying about exchange rates."</p>
                 </div>
               </div>
-              <div className="flex gap-4">
+              <div className="flex gap-6 items-start p-6 bg-slate-50 rounded-xl border border-slate-100">
                 <img src="https://picsum.photos/seed/succ2/100/100" className="w-24 h-24 rounded-xl object-cover" />
                 <div>
                   <h3 className="text-xl font-bold text-slate-900">Sana's Graphic Design Studio</h3>
                   <p className="text-emerald-600 font-medium mb-2">Creative Director • Lahore</p>
-                  <p>"I started as a solo freelancer and now I run a small agency hiring other freelancers from this very platform. It's an ecosystem of growth."</p>
+                  <p className="italic text-slate-600">"I started as a solo freelancer and now I run a small agency hiring other freelancers from this very platform. It's an ecosystem of growth that understands the Pakistani market."</p>
                 </div>
               </div>
             </div>
@@ -1196,24 +1356,29 @@ const App = () => {
       );
       case 'resources': return (
         <ContentPage 
-          title="Resources & Learning" 
+          title="Resources & Learning Center" 
           onBack={() => setCurrentPage('home')}
           content={
             <div className="grid md:grid-cols-2 gap-6">
-              <div className="p-6 border rounded-xl hover:shadow-md transition-shadow">
+              <div className="p-6 border rounded-xl hover:border-emerald-500 transition-all cursor-pointer">
                 <BookOpen className="text-emerald-600 mb-4" size={32} />
                 <h3 className="font-bold text-lg mb-2">Freelancing 101</h3>
-                <p className="text-sm">A complete guide to starting your career, optimizing your profile, and winning your first job.</p>
+                <p className="text-sm text-slate-600">A complete guide to starting your career, optimizing your profile, and winning your first job on GAB.</p>
               </div>
-              <div className="p-6 border rounded-xl hover:shadow-md transition-shadow">
+              <div className="p-6 border rounded-xl hover:border-emerald-500 transition-all cursor-pointer">
                 <Shield className="text-emerald-600 mb-4" size={32} />
                 <h3 className="font-bold text-lg mb-2">Safety & Security</h3>
-                <p className="text-sm">Learn how to stay safe, avoid scams, and use our Escrow protection effectively.</p>
+                <p className="text-sm text-slate-600">Learn how to stay safe, avoid scams, and use our Escrow protection effectively to guarantee payment.</p>
               </div>
-              <div className="p-6 border rounded-xl hover:shadow-md transition-shadow">
+              <div className="p-6 border rounded-xl hover:border-emerald-500 transition-all cursor-pointer">
                 <Award className="text-emerald-600 mb-4" size={32} />
                 <h3 className="font-bold text-lg mb-2">Skill Certifications</h3>
-                <p className="text-sm">Get verified badges for your skills by taking our standardized tests.</p>
+                <p className="text-sm text-slate-600">Get verified badges for your skills by taking our standardized tests to boost your profile visibility.</p>
+              </div>
+              <div className="p-6 border rounded-xl hover:border-emerald-500 transition-all cursor-pointer">
+                <Globe className="text-emerald-600 mb-4" size={32} />
+                <h3 className="font-bold text-lg mb-2">Tax & Compliance</h3>
+                <p className="text-sm text-slate-600">Understanding FBR filer status and how to manage your taxes as a freelancer in Pakistan.</p>
               </div>
             </div>
           }
@@ -1225,14 +1390,22 @@ const App = () => {
           onBack={() => setCurrentPage('home')}
           content={
             <div>
-              <p className="text-xl mb-6">Scale your workforce with GAB Enterprise.</p>
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-3"><CheckCircle2 className="text-emerald-600" /> Dedicated Account Manager</li>
-                <li className="flex items-center gap-3"><CheckCircle2 className="text-emerald-600" /> Pre-vetted Top 1% Talent</li>
-                <li className="flex items-center gap-3"><CheckCircle2 className="text-emerald-600" /> Consolidated Billing & Invoicing</li>
-                <li className="flex items-center gap-3"><CheckCircle2 className="text-emerald-600" /> Custom NDA & Compliance</li>
-              </ul>
-              <Button className="w-full md:w-auto">Contact Sales</Button>
+              <p className="text-xl mb-6 text-slate-700">Scale your workforce with GAB Enterprise. We provide end-to-end talent management for large organizations.</p>
+              <div className="grid md:grid-cols-2 gap-8 mb-8">
+                <div className="bg-slate-50 p-6 rounded-xl">
+                   <h3 className="font-bold text-lg mb-3">Why Enterprise?</h3>
+                   <ul className="space-y-4">
+                    <li className="flex items-center gap-3"><CheckCircle2 className="text-emerald-600" /> Dedicated Account Manager</li>
+                    <li className="flex items-center gap-3"><CheckCircle2 className="text-emerald-600" /> Pre-vetted Top 1% Talent</li>
+                    <li className="flex items-center gap-3"><CheckCircle2 className="text-emerald-600" /> Consolidated Billing & Invoicing</li>
+                    <li className="flex items-center gap-3"><CheckCircle2 className="text-emerald-600" /> Custom NDA & Compliance</li>
+                  </ul>
+                </div>
+                <div className="flex flex-col justify-center">
+                   <p className="mb-4">Perfect for software houses, agencies, and large corporations needing flexible, high-quality talent pools.</p>
+                   <Button className="w-full md:w-auto self-start">Contact Sales</Button>
+                </div>
+              </div>
             </div>
           }
         />
@@ -1245,29 +1418,29 @@ const App = () => {
             <div>
               <div className="bg-emerald-50 p-6 rounded-xl border border-emerald-100 mb-8">
                 <h3 className="text-emerald-800 font-bold text-lg mb-2 flex items-center gap-2"><ShieldCheck /> Your money is safe with us</h3>
-                <p className="text-emerald-700">We hold funds securely until the work is approved. This protects both clients and freelancers.</p>
+                <p className="text-emerald-700">We hold funds securely until the work is approved. This protects both clients and freelancers from fraud and non-payment.</p>
               </div>
-              <h3 className="font-bold text-xl mb-4">How it works</h3>
-              <div className="space-y-6">
-                <div className="flex gap-4">
-                  <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center font-bold shrink-0">1</div>
+              <h3 className="font-bold text-xl mb-6">How it works</h3>
+              <div className="space-y-8 relative before:absolute before:left-4 before:top-0 before:h-full before:w-0.5 before:bg-slate-200">
+                <div className="flex gap-6 relative">
+                  <div className="w-8 h-8 bg-white border-2 border-emerald-600 rounded-full flex items-center justify-center font-bold text-emerald-600 shrink-0 z-10">1</div>
                   <div>
-                    <h4 className="font-bold">Client Deposits Funds</h4>
-                    <p className="text-sm">When a client hires a freelancer, the project amount is deposited into our secure Escrow account.</p>
+                    <h4 className="font-bold text-lg">Client Deposits Funds</h4>
+                    <p className="text-sm text-slate-600 mt-1">When a client hires a freelancer, the agreed project amount is deposited into our secure, neutral Escrow account.</p>
                   </div>
                 </div>
-                <div className="flex gap-4">
-                  <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center font-bold shrink-0">2</div>
+                <div className="flex gap-6 relative">
+                  <div className="w-8 h-8 bg-white border-2 border-emerald-600 rounded-full flex items-center justify-center font-bold text-emerald-600 shrink-0 z-10">2</div>
                   <div>
-                    <h4 className="font-bold">Freelancer Works</h4>
-                    <p className="text-sm">The freelancer completes the work knowing the funds are secured.</p>
+                    <h4 className="font-bold text-lg">Freelancer Works</h4>
+                    <p className="text-sm text-slate-600 mt-1">The freelancer completes the work knowing the funds are secured and available.</p>
                   </div>
                 </div>
-                <div className="flex gap-4">
-                  <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center font-bold shrink-0">3</div>
+                <div className="flex gap-6 relative">
+                  <div className="w-8 h-8 bg-white border-2 border-emerald-600 rounded-full flex items-center justify-center font-bold text-emerald-600 shrink-0 z-10">3</div>
                   <div>
-                    <h4 className="font-bold">Payment Released</h4>
-                    <p className="text-sm">Once the client approves the work, funds are instantly released to the freelancer's wallet.</p>
+                    <h4 className="font-bold text-lg">Payment Released</h4>
+                    <p className="text-sm text-slate-600 mt-1">Once the client reviews and approves the work, funds are instantly released to the freelancer's wallet.</p>
                   </div>
                 </div>
               </div>
@@ -1276,7 +1449,7 @@ const App = () => {
         />
       );
 
-      default: return <HomePage setPage={setCurrentPage} categories={categories} activeAds={activeAds} />;
+      default: return <HomePage setPage={setCurrentPage} categories={INITIAL_CATEGORIES} activeAds={activeAds} />;
     }
   };
 
@@ -1300,8 +1473,9 @@ const App = () => {
               <span className="font-bold text-xl">GAB <span className="text-emerald-600">Freelancers</span></span>
             </div>
             <div className="hidden md:flex items-center space-x-8">
-              <button onClick={() => setCurrentPage('jobs')} className="text-sm font-medium">Find Work</button>
-              <button onClick={() => setCurrentPage('dashboard')} className="text-sm font-medium">Dashboard</button>
+              <button onClick={() => setCurrentPage('jobs')} className="text-sm font-medium hover:text-emerald-600">Find Work</button>
+              <button onClick={() => setCurrentPage('freelancers')} className="text-sm font-medium hover:text-emerald-600">Hire Talent</button>
+              <button onClick={() => setCurrentPage('dashboard')} className="text-sm font-medium hover:text-emerald-600">Dashboard</button>
             </div>
             <div className="hidden md:flex items-center space-x-4">
               {user.role === UserRole.CLIENT && (
@@ -1314,7 +1488,10 @@ const App = () => {
                 }
               }}>
                  <img src={user.avatar} className="w-8 h-8 rounded-full border border-slate-200" alt="Avatar" />
-                 <span className="text-sm font-medium">{user.name}</span>
+                 <div className="text-right hidden lg:block">
+                    <p className="text-sm font-bold leading-none">{user.name}</p>
+                    <p className="text-[10px] text-slate-500 uppercase">{user.role}</p>
+                 </div>
               </div>
             </div>
           </div>
@@ -1347,11 +1524,10 @@ const App = () => {
               </li>
               <li>
                 <button onClick={() => {
-                  if (!user) {
-                    setRegisterMode(true);
-                    setCurrentPage('auth');
+                  if (user && user.role === UserRole.FREELANCER) {
+                    setCurrentPage('profile');
                   } else {
-                    setCurrentPage('dashboard');
+                    alert("Please log in as a freelancer to edit your profile.");
                   }
                 }} className="hover:text-emerald-500 transition-colors text-left">Create Profile</button>
               </li>
@@ -1370,10 +1546,8 @@ const App = () => {
                 <button onClick={() => {
                   if (user && user.role === UserRole.CLIENT) {
                     setCurrentPage('post-job');
-                  } else if (user && user.role !== UserRole.CLIENT) {
-                    alert("Please switch to a Client profile to post a job.");
                   } else {
-                    setCurrentPage('auth');
+                    alert("Please log in as a client to post a job.");
                   }
                 }} className="hover:text-emerald-500 transition-colors text-left">Post a Job</button>
               </li>
@@ -1391,9 +1565,9 @@ const App = () => {
           <div>
             <h4 className="font-bold text-white mb-4">Payment Partners</h4>
             <div className="flex gap-2">
-               <div className="bg-white/10 px-2 py-1 rounded text-xs">JazzCash</div>
-               <div className="bg-white/10 px-2 py-1 rounded text-xs">EasyPaisa</div>
-               <div className="bg-white/10 px-2 py-1 rounded text-xs">Raast</div>
+               <div className="bg-white/10 px-2 py-1 rounded text-xs cursor-help" title="Integrated">JazzCash</div>
+               <div className="bg-white/10 px-2 py-1 rounded text-xs cursor-help" title="Integrated">EasyPaisa</div>
+               <div className="bg-white/10 px-2 py-1 rounded text-xs cursor-help" title="Integrated">Raast</div>
             </div>
           </div>
         </div>
