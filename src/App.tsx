@@ -33,7 +33,11 @@ import {
   Mail,
   Key,
   ChevronRight,
-  Star
+  Star,
+  BookOpen,
+  Award,
+  Globe,
+  Shield
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -441,6 +445,20 @@ const WalletModal = ({
     </div>
   );
 };
+
+const ContentPage = ({ title, content, onBack }: { title: string, content: React.ReactNode, onBack: () => void }) => (
+  <div className="max-w-4xl mx-auto px-6 py-12">
+    <button onClick={onBack} className="flex items-center text-slate-500 hover:text-emerald-600 mb-6">
+      <ChevronLeft size={18} className="mr-1" /> Back
+    </button>
+    <div className="bg-white p-10 rounded-2xl border border-slate-200 shadow-sm">
+      <h1 className="text-3xl font-bold text-slate-900 mb-8 pb-4 border-b border-slate-100">{title}</h1>
+      <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed">
+        {content}
+      </div>
+    </div>
+  </div>
+);
 
 // --- Main Pages ---
 
@@ -1148,6 +1166,116 @@ const App = () => {
       );
       case 'post-job': return <PostJobPage onPost={handlePostJob} categories={categories} user={user} />;
       case 'workroom': return <WorkroomPage onBack={() => setCurrentPage('dashboard')} user={user} onReleaseFunds={handleReleaseFunds} job={activeWorkroomJob} />;
+      
+      // -- Content Pages --
+      case 'success-stories': return (
+        <ContentPage 
+          title="Success Stories" 
+          onBack={() => setCurrentPage('home')}
+          content={
+            <div className="space-y-8">
+              <div className="flex gap-4">
+                <img src="https://picsum.photos/seed/succ1/100/100" className="w-24 h-24 rounded-xl object-cover" />
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900">Ali's Journey to Top Rated</h3>
+                  <p className="text-emerald-600 font-medium mb-2">Web Developer • Earned 5 Million+ PKR</p>
+                  <p>"GAB Freelancers gave me the platform to showcase my skills to local businesses. The local payment integration made it so easy to receive funds directly into my JazzCash."</p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <img src="https://picsum.photos/seed/succ2/100/100" className="w-24 h-24 rounded-xl object-cover" />
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900">Sana's Graphic Design Studio</h3>
+                  <p className="text-emerald-600 font-medium mb-2">Creative Director • Lahore</p>
+                  <p>"I started as a solo freelancer and now I run a small agency hiring other freelancers from this very platform. It's an ecosystem of growth."</p>
+                </div>
+              </div>
+            </div>
+          }
+        />
+      );
+      case 'resources': return (
+        <ContentPage 
+          title="Resources & Learning" 
+          onBack={() => setCurrentPage('home')}
+          content={
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="p-6 border rounded-xl hover:shadow-md transition-shadow">
+                <BookOpen className="text-emerald-600 mb-4" size={32} />
+                <h3 className="font-bold text-lg mb-2">Freelancing 101</h3>
+                <p className="text-sm">A complete guide to starting your career, optimizing your profile, and winning your first job.</p>
+              </div>
+              <div className="p-6 border rounded-xl hover:shadow-md transition-shadow">
+                <Shield className="text-emerald-600 mb-4" size={32} />
+                <h3 className="font-bold text-lg mb-2">Safety & Security</h3>
+                <p className="text-sm">Learn how to stay safe, avoid scams, and use our Escrow protection effectively.</p>
+              </div>
+              <div className="p-6 border rounded-xl hover:shadow-md transition-shadow">
+                <Award className="text-emerald-600 mb-4" size={32} />
+                <h3 className="font-bold text-lg mb-2">Skill Certifications</h3>
+                <p className="text-sm">Get verified badges for your skills by taking our standardized tests.</p>
+              </div>
+            </div>
+          }
+        />
+      );
+      case 'enterprise': return (
+        <ContentPage 
+          title="Enterprise Solutions" 
+          onBack={() => setCurrentPage('home')}
+          content={
+            <div>
+              <p className="text-xl mb-6">Scale your workforce with GAB Enterprise.</p>
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-center gap-3"><CheckCircle2 className="text-emerald-600" /> Dedicated Account Manager</li>
+                <li className="flex items-center gap-3"><CheckCircle2 className="text-emerald-600" /> Pre-vetted Top 1% Talent</li>
+                <li className="flex items-center gap-3"><CheckCircle2 className="text-emerald-600" /> Consolidated Billing & Invoicing</li>
+                <li className="flex items-center gap-3"><CheckCircle2 className="text-emerald-600" /> Custom NDA & Compliance</li>
+              </ul>
+              <Button className="w-full md:w-auto">Contact Sales</Button>
+            </div>
+          }
+        />
+      );
+      case 'escrow': return (
+        <ContentPage 
+          title="Escrow Protection" 
+          onBack={() => setCurrentPage('home')}
+          content={
+            <div>
+              <div className="bg-emerald-50 p-6 rounded-xl border border-emerald-100 mb-8">
+                <h3 className="text-emerald-800 font-bold text-lg mb-2 flex items-center gap-2"><ShieldCheck /> Your money is safe with us</h3>
+                <p className="text-emerald-700">We hold funds securely until the work is approved. This protects both clients and freelancers.</p>
+              </div>
+              <h3 className="font-bold text-xl mb-4">How it works</h3>
+              <div className="space-y-6">
+                <div className="flex gap-4">
+                  <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center font-bold shrink-0">1</div>
+                  <div>
+                    <h4 className="font-bold">Client Deposits Funds</h4>
+                    <p className="text-sm">When a client hires a freelancer, the project amount is deposited into our secure Escrow account.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center font-bold shrink-0">2</div>
+                  <div>
+                    <h4 className="font-bold">Freelancer Works</h4>
+                    <p className="text-sm">The freelancer completes the work knowing the funds are secured.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center font-bold shrink-0">3</div>
+                  <div>
+                    <h4 className="font-bold">Payment Released</h4>
+                    <p className="text-sm">Once the client approves the work, funds are instantly released to the freelancer's wallet.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        />
+      );
+
       default: return <HomePage setPage={setCurrentPage} categories={categories} activeAds={activeAds} />;
     }
   };
@@ -1196,6 +1324,83 @@ const App = () => {
       <main className="min-h-[calc(100vh-64px)]">
         {renderPage()}
       </main>
+
+      {/* Footer */}
+      <footer className={`${isDarkTheme ? 'bg-slate-950 text-slate-400' : 'bg-slate-900 text-slate-300'} py-12`}>
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 grid md:grid-cols-4 gap-8">
+          <div>
+             <div className="flex items-center mb-4">
+              <div className="w-6 h-6 bg-emerald-500 rounded flex items-center justify-center mr-2">
+                <span className="text-white font-bold text-xs">G</span>
+              </div>
+              <span className="font-bold text-lg text-white">GAB Freelancers</span>
+            </div>
+            <p className="text-sm opacity-70">
+              Pakistan's trusted marketplace. Connecting talent with opportunity through secure local rails.
+            </p>
+          </div>
+          <div>
+            <h4 className="font-bold text-white mb-4">For Freelancers</h4>
+            <ul className="space-y-2 text-sm opacity-70">
+              <li>
+                <button onClick={() => setCurrentPage('jobs')} className="hover:text-emerald-500 transition-colors text-left">Find Work</button>
+              </li>
+              <li>
+                <button onClick={() => {
+                  if (!user) {
+                    setRegisterMode(true);
+                    setCurrentPage('auth');
+                  } else {
+                    setCurrentPage('dashboard');
+                  }
+                }} className="hover:text-emerald-500 transition-colors text-left">Create Profile</button>
+              </li>
+              <li>
+                <button onClick={() => setCurrentPage('success-stories')} className="hover:text-emerald-500 transition-colors text-left">Success Stories</button>
+              </li>
+              <li>
+                <button onClick={() => setCurrentPage('resources')} className="hover:text-emerald-500 transition-colors text-left">Resources</button>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold text-white mb-4">For Clients</h4>
+            <ul className="space-y-2 text-sm opacity-70">
+              <li>
+                <button onClick={() => {
+                  if (user && user.role === UserRole.CLIENT) {
+                    setCurrentPage('post-job');
+                  } else if (user && user.role !== UserRole.CLIENT) {
+                    alert("Please switch to a Client profile to post a job.");
+                  } else {
+                    setCurrentPage('auth');
+                  }
+                }} className="hover:text-emerald-500 transition-colors text-left">Post a Job</button>
+              </li>
+              <li>
+                <button onClick={() => setCurrentPage('freelancers')} className="hover:text-emerald-500 transition-colors text-left">Find Talent</button>
+              </li>
+              <li>
+                <button onClick={() => setCurrentPage('enterprise')} className="hover:text-emerald-500 transition-colors text-left">Enterprise Solutions</button>
+              </li>
+              <li>
+                <button onClick={() => setCurrentPage('escrow')} className="hover:text-emerald-500 transition-colors text-left">Escrow Protection</button>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold text-white mb-4">Payment Partners</h4>
+            <div className="flex gap-2">
+               <div className="bg-white/10 px-2 py-1 rounded text-xs">JazzCash</div>
+               <div className="bg-white/10 px-2 py-1 rounded text-xs">EasyPaisa</div>
+               <div className="bg-white/10 px-2 py-1 rounded text-xs">Raast</div>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 mt-12 pt-8 border-t border-slate-800 text-center text-xs opacity-50">
+          © 2024 GAB Freelancers Pakistan. All rights reserved.
+        </div>
+      </footer>
     </div>
   );
 };
