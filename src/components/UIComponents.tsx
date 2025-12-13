@@ -4,7 +4,7 @@ import {
   Clock,
   Star
 } from 'lucide-react';
-import { Job, FreelancerProfile } from '../types';
+import type { Job, FreelancerProfile } from '../types';
 
 // --- Badges ---
 
@@ -32,12 +32,12 @@ export const Badge = ({ children, color = 'slate' }: { children?: React.ReactNod
 };
 
 export const PaymentMethodBadge = ({ method }: { method: string }) => {
-  const colors = {
+  const colors: Record<string, string> = {
     'JazzCash': 'bg-red-50 text-red-700 border-red-100',
     'EasyPaisa': 'bg-green-50 text-green-700 border-green-100',
     'Bank Transfer': 'bg-blue-50 text-blue-700 border-blue-100',
   };
-  const colorClass = colors[method as keyof typeof colors] || 'bg-gray-50 text-gray-700';
+  const colorClass = colors[method] || 'bg-gray-50 text-gray-700';
   
   return (
     <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded ${colorClass}`}>
@@ -134,14 +134,23 @@ export const FreelancerCard: React.FC<{ profile: FreelancerProfile }> = ({ profi
 
 // --- Inputs & Buttons ---
 
-export const Button = ({ 
+interface ButtonProps {
+  children: React.ReactNode;
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  className?: string;
+  onClick?: () => void;
+  disabled?: boolean;
+  isLoading?: boolean;
+}
+
+export const Button: React.FC<ButtonProps> = ({ 
   children, 
   variant = 'primary', 
   className = '', 
   onClick, 
   disabled = false, 
   isLoading = false 
-}: any) => {
+}) => {
   const baseStyle = "px-4 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
   const variants = {
     primary: "bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm hover:shadow-emerald-200",
@@ -154,7 +163,7 @@ export const Button = ({
     <button 
       onClick={onClick} 
       disabled={disabled || isLoading}
-      className={`${baseStyle} ${variants[variant as keyof typeof variants]} ${className}`}
+      className={`${baseStyle} ${variants[variant]} ${className}`}
     >
       {isLoading ? (
         <>
