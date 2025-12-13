@@ -1,83 +1,170 @@
-export const UserRole = {
-  FREELANCER: 'FREELANCER',
-  CLIENT: 'CLIENT',
-  ADMIN: 'ADMIN'
-} as const;
+import React from 'react';
+import { 
+  ShieldCheck, 
+  Clock,
+  Star
+} from 'lucide-react';
+import { Job, FreelancerProfile } from '../types';
 
-export type UserRole = typeof UserRole[keyof typeof UserRole];
+// --- Badges ---
 
-export interface PayoutDetails {
-  method: 'Bank Transfer' | 'EasyPaisa' | 'JazzCash';
-  bankName?: string; // e.g., HBL, Meezan
-  accountTitle: string;
-  accountNumber: string;
-}
+export const VerificationBadge = () => (
+  <div className="flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+    <ShieldCheck size={12} />
+    <span>NADRA Verified</span>
+  </div>
+);
 
-export interface User {
-  id: string;
-  name: string;
-  avatar: string;
-  role: UserRole;
-  verified: boolean; // Simulates NADRA verification
-  balance: number;
-  status?: 'Active' | 'Banned';
-  agreedToTerms?: boolean;
-  payoutDetails?: PayoutDetails; // For Freelancers to receive money
-}
+export const Badge = ({ children, color = 'slate' }: { children?: React.ReactNode, color?: 'slate' | 'emerald' | 'blue' | 'red' | 'yellow' }) => {
+  const colors = {
+    slate: 'bg-slate-100 text-slate-700 border-slate-200',
+    emerald: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+    blue: 'bg-blue-50 text-blue-700 border-blue-100',
+    red: 'bg-red-50 text-red-700 border-red-100',
+    yellow: 'bg-yellow-50 text-yellow-800 border-yellow-100'
+  };
+  
+  return (
+    <span className={`px-2 py-0.5 rounded text-xs font-medium border ${colors[color]}`}>
+      {children}
+    </span>
+  );
+};
 
-export interface PlatformPaymentDetails {
-  bankName: string;
-  accountTitle: string;
-  accountNumber: string;
-  iban: string;
-  easyPaisaNumber: string;
-  jazzCashNumber: string;
-}
+export const PaymentMethodBadge = ({ method }: { method: string }) => {
+  const colors = {
+    'JazzCash': 'bg-red-50 text-red-700 border-red-100',
+    'EasyPaisa': 'bg-green-50 text-green-700 border-green-100',
+    'Bank Transfer': 'bg-blue-50 text-blue-700 border-blue-100',
+  };
+  const colorClass = colors[method as keyof typeof colors] || 'bg-gray-50 text-gray-700';
+  
+  return (
+    <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded ${colorClass}`}>
+      {method}
+    </span>
+  );
+};
 
-export interface Skill {
-  name: string;
-  level: 'Beginner' | 'Intermediate' | 'Expert';
-}
+// --- Cards ---
 
-export interface Job {
-  id: string;
-  title: string;
-  description: string;
-  budget: number;
-  currency: string;
-  postedBy: User;
-  postedAt: string; // ISO Date
-  category: string;
-  type: 'Fixed Price' | 'Hourly';
-  applicants: number;
-  status: 'Open' | 'In Progress' | 'Completed' | 'Paid' | 'Cancelled';
-  assignedTo?: string; // Freelancer ID
-}
+export const JobCard: React.FC<{ job: Job; onClick: () => void }> = ({ job, onClick }) => (
+  <div 
+    onClick={onClick}
+    className="group bg-white p-6 rounded-xl border border-slate-200 hover:border-emerald-500 hover:shadow-lg transition-all cursor-pointer relative overflow-hidden"
+  >
+    <div className="flex justify-between items-start mb-4">
+      <div>
+        <h3 className="text-lg font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
+          {job.title}
+        </h3>
+        <div className="flex items-center gap-2 text-sm text-slate-500 mt-1">
+          <span className="font-medium bg-slate-100 px-2 py-0.5 rounded text-xs">{job.category}</span>
+          <span>•</span>
+          <span className="flex items-center gap-1"><Clock size={12} /> Posted {new Date(job.postedAt).toLocaleDateString()}</span>
+        </div>
+      </div>
+      <div className="text-right shrink-0 ml-4">
+        <div className="text-lg font-bold text-slate-900 whitespace-nowrap">
+          PKR {job.budget.toLocaleString()}
+        </div>
+        <div className="text-xs text-slate-500 uppercase">{job.type}</div>
+      </div>
+    </div>
+    
+    <p className="text-slate-600 text-sm line-clamp-2 mb-4">
+      {job.description}
+    </p>
 
-export interface FreelancerProfile {
-  id: string;
-  user: User;
-  title: string;
-  bio: string;
-  hourlyRate: number;
-  skills: string[];
-  rating: number;
-  jobsCompleted: number;
-  totalEarned: number;
-}
+    <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+      <div className="flex items-center gap-2">
+        {job.postedBy.verified && <VerificationBadge />}
+        <span className="text-xs text-slate-400">by {job.postedBy.name}</span>
+      </div>
+      <div className="flex items-center gap-2">
+         {job.status === 'In Progress' && <Badge color="blue">In Progress</Badge>}
+         {job.status === 'Completed' && <Badge color="emerald">Completed</Badge>}
+         <span className="text-xs font-medium text-emerald-600">
+          {job.applicants} Proposals
+         </span>
+      </div>
+    </div>
+  </div>
+);
 
-export interface Transaction {
-  id: string;
-  date: string;
-  amount: number;
-  type: 'Withdrawal' | 'Deposit' | 'Payment';
-  method: 'JazzCash' | 'EasyPaisa' | 'Bank Transfer';
-  status: 'Completed' | 'Pending';
-}
+export const FreelancerCard: React.FC<{ profile: FreelancerProfile }> = ({ profile }) => (
+  <div className="bg-white p-6 rounded-xl border border-slate-200 hover:shadow-md transition-shadow">
+    <div className="flex items-center gap-4 mb-4">
+      <img src={profile.user.avatar} alt={profile.user.name} className="w-16 h-16 rounded-full object-cover border-2 border-slate-100" />
+      <div>
+        <div className="flex items-center gap-2">
+          <h3 className="font-bold text-slate-900">{profile.user.name}</h3>
+          {profile.user.verified && <VerificationBadge />}
+        </div>
+        <p className="text-emerald-600 text-sm font-medium">{profile.title}</p>
+        <div className="flex items-center gap-1 text-yellow-500 text-sm mt-0.5">
+          <Star size={14} fill="currentColor" />
+          <span className="font-bold">{profile.rating}</span>
+          <span className="text-slate-400 font-normal">({profile.jobsCompleted} jobs)</span>
+        </div>
+      </div>
+    </div>
+    
+    <p className="text-slate-600 text-sm mb-4 line-clamp-3">{profile.bio}</p>
+    
+    <div className="flex flex-wrap gap-2 mb-4">
+      {profile.skills.slice(0, 3).map(skill => (
+        <span key={skill} className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full">
+          {skill}
+        </span>
+      ))}
+      {profile.skills.length > 3 && (
+        <span className="text-xs bg-slate-50 text-slate-500 px-2 py-1 rounded-full">+{profile.skills.length - 3}</span>
+      )}
+    </div>
 
-export interface Advertisement {
-  id: string;
-  title: string;
-  content: string;
-  isActive: boolean;
-}
+    <div className="flex justify-between items-center pt-4 border-t border-slate-100">
+      <span className="font-bold text-slate-900">PKR {profile.hourlyRate}/hr</span>
+      <button className="text-sm font-medium text-emerald-600 hover:text-emerald-700 hover:underline">
+        View Profile
+      </button>
+    </div>
+  </div>
+);
+
+// --- Inputs & Buttons ---
+
+export const Button = ({ 
+  children, 
+  variant = 'primary', 
+  className = '', 
+  onClick, 
+  disabled = false, 
+  isLoading = false 
+}: any) => {
+  const baseStyle = "px-4 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
+  const variants = {
+    primary: "bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm hover:shadow-emerald-200",
+    secondary: "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50",
+    outline: "border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50",
+    ghost: "text-slate-600 hover:bg-slate-100"
+  };
+
+  return (
+    <button 
+      onClick={onClick} 
+      disabled={disabled || isLoading}
+      className={`${baseStyle} ${variants[variant as keyof typeof variants]} ${className}`}
+    >
+      {isLoading ? (
+        <>
+          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Processing...
+        </>
+      ) : children}
+    </button>
+  );
+};
