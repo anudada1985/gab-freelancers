@@ -33,7 +33,9 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 import { JobCard, FreelancerCard, Button, VerificationBadge, Badge } from './components/UIComponents';
+// Import UserRole value separately
 import { UserRole } from './types';
+// Import types
 import type { Job, FreelancerProfile, User, Transaction, Advertisement, PayoutDetails, PlatformPaymentDetails } from './types';
 import { generateJobDescription } from './services/geminiService';
 
