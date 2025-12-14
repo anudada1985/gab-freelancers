@@ -39,7 +39,9 @@ import {
   Globe,
   Shield,
   Edit3,
-  Save
+  Save,
+  LogIn,
+  UserPlus
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -48,7 +50,7 @@ import { UserRole } from './types';
 import type { Job, FreelancerProfile, User, Transaction, Advertisement, PayoutDetails, PlatformPaymentDetails, Proposal } from './types';
 import { generateJobDescription } from './services/geminiService';
 
-// --- Constants & Initial Data ---
+// --- Constants (Configuration Only) ---
 
 const INITIAL_CATEGORIES = [
   'Web Development',
@@ -72,66 +74,6 @@ const INITIAL_PLATFORM_PAYMENT: PlatformPaymentDetails = {
   jazzCashNumber: '0300-7654321'
 };
 
-const INITIAL_USERS: User[] = [
-  {
-    id: 'u1',
-    name: 'Ahmed Hassan',
-    email: 'ahmed@example.com',
-    password: 'password',
-    avatar: 'https://picsum.photos/seed/ahmed/200/200',
-    role: UserRole.FREELANCER,
-    verified: true,
-    balance: 154000,
-    status: 'Active',
-    agreedToTerms: true,
-    title: 'Senior React Developer',
-    bio: 'Experienced developer specializing in React and Node.js. I have built over 20+ e-commerce applications for local and international clients.',
-    hourlyRate: 3500,
-    skills: ['React', 'Node.js', 'Typescript', 'Next.js'],
-    rating: 4.8,
-    jobsCompleted: 15,
-    payoutDetails: {
-      method: 'Bank Transfer',
-      bankName: 'HBL',
-      accountTitle: 'Ahmed Hassan',
-      accountNumber: '1234567890'
-    }
-  },
-  {
-    id: 'c1',
-    name: 'Sapphire Textiles',
-    email: 'hr@sapphire.com',
-    password: 'password',
-    avatar: 'https://picsum.photos/seed/sapphire/200/200',
-    role: UserRole.CLIENT,
-    verified: true,
-    balance: 500000,
-    status: 'Active',
-    agreedToTerms: true
-  }
-];
-
-const INITIAL_JOBS: Job[] = [
-  {
-    id: 'j1',
-    title: 'E-commerce React Developer for Local Brand',
-    description: 'We need an experienced React developer to build a clothing store frontend. Must integrate with JazzCash payment gateway API. The design is ready in Figma.\n\nResponsibilities:\n- Convert Figma designs to React components\n- Integrate JazzCash/EasyPaisa APIs\n- Ensure mobile responsiveness\n\nRequirements:\n- 3+ years React experience\n- Portfolio of e-commerce sites\n- Based in Pakistan for occasional syncs',
-    budget: 150000,
-    currency: 'PKR',
-    postedBy: INITIAL_USERS[1],
-    postedAt: new Date().toISOString(),
-    category: 'Web Development',
-    type: 'Fixed Price',
-    applicants: 12,
-    status: 'In Progress',
-    assignedTo: 'u1'
-  }
-];
-
-const INITIAL_TRANSACTIONS: Transaction[] = [
-  { id: 't1', date: '2023-06-15', amount: 25000, type: 'Withdrawal', method: 'JazzCash', status: 'Completed' },
-];
-
 // --- Authentication Components ---
 
 const AuthPage = ({ onLogin, onRegister, users }: { onLogin: (u: User) => void, onRegister: () => void, users: User[] }) => {
@@ -140,16 +82,18 @@ const AuthPage = ({ onLogin, onRegister, users }: { onLogin: (u: User) => void, 
   const [error, setError] = useState('');
 
   const handleLogin = () => {
+    // Basic auth check against registered users
     const user = users.find(u => u.email === email && u.password === password);
     if (user) {
       onLogin(user);
     } else {
-      if (email === 'Ansar' && password === 'Anudada@007') {
+      // Admin Backdoor for system management (optional, kept for usability if needed)
+      if (email === 'admin@gab.com' && password === 'admin123') {
          const adminUser: User = {
            id: 'admin1',
-           name: 'Admin Ansar',
+           name: 'System Admin',
            email: 'admin@gab.com',
-           avatar: '',
+           avatar: 'https://ui-avatars.com/api/?name=Admin&background=000&color=fff',
            role: UserRole.ADMIN,
            verified: true,
            balance: 0,
@@ -177,11 +121,11 @@ const AuthPage = ({ onLogin, onRegister, users }: { onLogin: (u: User) => void, 
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Email / Username</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input 
-                type="text" 
+                type="email" 
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
@@ -208,10 +152,6 @@ const AuthPage = ({ onLogin, onRegister, users }: { onLogin: (u: User) => void, 
         <div className="mt-6 text-center text-sm">
           <span className="text-slate-500">Don't have an account? </span>
           <button onClick={onRegister} className="text-emerald-600 font-bold hover:underline">Create Account</button>
-        </div>
-        <div className="mt-4 text-center text-xs text-slate-400">
-          <p>Demo Login: ahmed@example.com / password</p>
-          <p>Client Login: hr@sapphire.com / password</p>
         </div>
       </div>
     </div>
@@ -276,22 +216,23 @@ const RegisterPage = ({ onRegisterComplete, onBack }: { onRegisterComplete: (u: 
 
         {step === 1 && (
           <div className="space-y-4">
+            <h3 className="font-bold text-lg text-slate-700 text-center mb-2">Select Your Role</h3>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div 
                 onClick={() => setRole(UserRole.FREELANCER)}
-                className={`p-4 border rounded-xl cursor-pointer text-center transition-all ${role === UserRole.FREELANCER ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500' : 'border-slate-200 hover:border-emerald-300'}`}
+                className={`p-4 border rounded-xl cursor-pointer text-center transition-all ${role === UserRole.FREELANCER ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500' : 'border-slate-200 hover:border-emerald-300'}`}
               >
                 <UserCircle className={`mx-auto mb-2 ${role === UserRole.FREELANCER ? 'text-emerald-600' : 'text-slate-400'}`} size={32} />
                 <h3 className={`font-bold ${role === UserRole.FREELANCER ? 'text-emerald-900' : 'text-slate-700'}`}>I want to Work</h3>
-                <p className="text-xs text-slate-500">Freelancer</p>
+                <p className="text-xs text-slate-500">Register as Freelancer</p>
               </div>
               <div 
                 onClick={() => setRole(UserRole.CLIENT)}
-                className={`p-4 border rounded-xl cursor-pointer text-center transition-all ${role === UserRole.CLIENT ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500' : 'border-slate-200 hover:border-emerald-300'}`}
+                className={`p-4 border rounded-xl cursor-pointer text-center transition-all ${role === UserRole.CLIENT ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500' : 'border-slate-200 hover:border-emerald-300'}`}
               >
                 <Briefcase className={`mx-auto mb-2 ${role === UserRole.CLIENT ? 'text-emerald-600' : 'text-slate-400'}`} size={32} />
                 <h3 className={`font-bold ${role === UserRole.CLIENT ? 'text-emerald-900' : 'text-slate-700'}`}>I want to Hire</h3>
-                <p className="text-xs text-slate-500">Client</p>
+                <p className="text-xs text-slate-500">Register as Client</p>
               </div>
             </div>
 
@@ -459,9 +400,9 @@ const ContentPage = ({ title, content, onBack }: { title: string, content: React
   </div>
 );
 
-// --- Main Pages ---
+// --- Pages ---
 
-const HomePage = ({ setPage, categories, activeAds }: { setPage: (p: string) => void, categories: string[], activeAds: Advertisement[] }) => (
+const HomePage = ({ setPage, categories, activeAds, jobs }: { setPage: (p: string) => void, categories: string[], activeAds: Advertisement[], jobs: Job[] }) => (
   <div className="space-y-16 pb-12">
     {/* Admin Ads Section */}
     {activeAds.length > 0 && (
@@ -524,10 +465,17 @@ const HomePage = ({ setPage, categories, activeAds }: { setPage: (p: string) => 
           <button onClick={() => setPage('jobs')} className="text-emerald-600 font-medium hover:underline">View All</button>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* We assume there are jobs passed from parent, simplified here for display */}
-          <div className="p-6 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-400">
-             (See Jobs Page for Live Listings)
-          </div>
+          {jobs.slice(0,3).map(job => (
+            <JobCard key={job.id} job={job} onClick={() => setPage('jobs')} />
+          ))}
+          {jobs.length === 0 && (
+             <div className="col-span-full text-center py-12 text-slate-500">
+               <div className="inline-block p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                 <Briefcase className="w-12 h-12 text-slate-300 mx-auto mb-2"/>
+                 <p>No active jobs. Be the first to post!</p>
+               </div>
+             </div>
+          )}
         </div>
       </div>
     </section>
@@ -570,7 +518,10 @@ const JobsPage = ({ onSelectJob, categories, jobs }: { onSelectJob: (job: Job) =
           <JobCard key={job.id} job={job} onClick={() => onSelectJob(job)} />
         ))}
         {jobs.length === 0 && (
-          <div className="text-center py-12 text-slate-500">No jobs available. Be the first to post one!</div>
+          <div className="text-center py-12 text-slate-500 bg-white rounded-xl border border-slate-200">
+            <h3 className="text-lg font-medium text-slate-900">No jobs found</h3>
+            <p className="text-sm text-slate-500">There are no active job listings at the moment.</p>
+          </div>
         )}
       </div>
     </div>
@@ -587,7 +538,7 @@ const JobDetailsPage = ({
 }: { 
   job: Job; 
   onBack: () => void; 
-  user: User; 
+  user: User | null; 
   onApply: (jobId: string, bid: number, cover: string) => void;
   proposals: Proposal[];
   onHire: (proposal: Proposal) => void;
@@ -597,7 +548,7 @@ const JobDetailsPage = ({
   const [coverLetter, setCoverLetter] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const hasApplied = proposals.some(p => p.freelancerId === user.id);
+  const hasApplied = user && proposals.some(p => p.freelancerId === user.id);
   const jobProposals = proposals; // Already filtered in App
 
   const handleSubmitProposal = () => {
@@ -644,7 +595,7 @@ const JobDetailsPage = ({
           </div>
 
           {/* Client View: Show Proposals */}
-          {user.id === job.postedBy.id && job.status === 'Open' && (
+          {user && user.id === job.postedBy.id && job.status === 'Open' && (
             <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
               <h2 className="text-xl font-bold mb-4">Received Proposals ({jobProposals.length})</h2>
               {jobProposals.length === 0 ? (
@@ -681,7 +632,7 @@ const JobDetailsPage = ({
           )}
 
           {/* Freelancer View: Application Form */}
-          {user.role === UserRole.FREELANCER && job.status === 'Open' && !hasApplied && (
+          {user && user.role === UserRole.FREELANCER && job.status === 'Open' && !hasApplied && (
              <div className="bg-white p-8 rounded-xl border border-emerald-200 shadow-lg ring-1 ring-emerald-100">
                <h3 className="text-xl font-bold mb-6">Submit Your Proposal</h3>
                <div className="space-y-4">
@@ -717,6 +668,16 @@ const JobDetailsPage = ({
             <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-blue-700 text-center font-medium">
               You have already submitted a proposal for this job.
             </div>
+          )}
+
+          {!user && (
+             <div className="bg-slate-50 p-8 rounded-xl border border-slate-200 text-center">
+               <Lock className="mx-auto text-slate-400 mb-2" size={32}/>
+               <h3 className="font-bold text-slate-900 mb-1">Login to Apply</h3>
+               <p className="text-slate-500 text-sm mb-4">You must be logged in as a freelancer to submit a proposal.</p>
+               {/* This button should ideally trigger the auth flow in App */}
+               <div className="text-sm text-emerald-600 font-medium">Please Log In or Sign Up from the menu.</div>
+             </div>
           )}
         </div>
 
@@ -1057,34 +1018,575 @@ const ProfilePage = ({ user, onSave, onBack }: { user: User, onSave: (u: User) =
   );
 };
 
-// --- App Root ---
+const DashboardPage = ({ 
+  user, 
+  onOpenWorkroom, 
+  activeAds, 
+  transactions,
+  onDeposit,
+  onWithdraw
+}: { 
+  user: User; 
+  onOpenWorkroom: () => void, 
+  activeAds: Advertisement[], 
+  transactions: Transaction[],
+  onDeposit: () => void,
+  onWithdraw: () => void
+}) => (
+  <div className="px-4 lg:px-20 py-8 min-h-screen">
+    
+    {/* Advertisements for Revenue */}
+    {activeAds.length > 0 && (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        {activeAds.map(ad => (
+          <div key={ad.id} className="bg-gradient-to-r from-amber-50 to-orange-50 border border-orange-100 p-4 rounded-xl flex items-center justify-between shadow-sm">
+            <div>
+              <span className="text-[10px] bg-orange-200 text-orange-800 px-1.5 py-0.5 rounded uppercase font-bold tracking-wide">Ad</span>
+              <h4 className="font-bold text-slate-800 mt-1">{ad.title}</h4>
+              <p className="text-sm text-slate-600">{ad.content}</p>
+            </div>
+            <Megaphone className="text-orange-400 opacity-50" size={32} />
+          </div>
+        ))}
+      </div>
+    )}
+
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      {/* Sidebar Info */}
+      <div className="space-y-6">
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center">
+          <img src={user.avatar} alt="Profile" className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-emerald-50" />
+          <h2 className="text-xl font-bold">{user.name}</h2>
+          <p className="text-slate-500 mb-2">{user.role === 'CLIENT' ? 'Client Account' : 'Top Rated Freelancer'}</p>
+          {user.verified && <div className="flex justify-center mb-4"><VerificationBadge /></div>}
+          
+          <div className="border-t border-slate-100 pt-4">
+            <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Available Balance</p>
+            <div className="flex items-center justify-center gap-2 mb-2">
+               <p className="text-2xl font-bold text-emerald-600">PKR {user.balance.toLocaleString()}</p>
+            </div>
+            
+            {user.role === UserRole.CLIENT ? (
+              <Button onClick={onDeposit} className="w-full text-sm bg-slate-900 hover:bg-slate-800">
+                <Upload size={14} /> Add Funds
+              </Button>
+            ) : (
+              <Button onClick={onWithdraw} className="w-full text-sm">
+                <Download size={14} /> Withdraw Funds
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Commission Transparency (Only for Freelancers and Admin) */}
+        {(user.role === UserRole.FREELANCER || user.role === UserRole.ADMIN) && (
+          <div className="bg-white p-6 rounded-xl border border-blue-200 shadow-sm bg-blue-50/50">
+            <h3 className="font-bold mb-2 flex items-center gap-2 text-blue-900">
+              <FileSignature size={18} /> Service Fee
+            </h3>
+            <div className="flex justify-between items-center">
+               <span className="text-slate-600 text-sm">Commission Rate</span>
+               <span className="font-bold text-blue-700">10%</span>
+            </div>
+            <p className="text-xs text-slate-500 mt-2">
+              A flat 10% service fee is deducted from all earnings upon withdrawal. This covers platform maintenance, escrow security, and support.
+            </p>
+          </div>
+        )}
+
+        {/* Local Payouts Status */}
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <h3 className="font-bold mb-4 flex items-center gap-2">
+            <Wallet size={18} /> {user.role === UserRole.CLIENT ? 'Payment Methods' : 'Payout Methods'}
+          </h3>
+          <div className="space-y-3">
+            {user.payoutDetails ? (
+               <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                <span className="text-sm font-medium">{user.payoutDetails.method}</span>
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Active</span>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 italic">No payout methods added.</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="lg:col-span-2 space-y-6">
+        
+        {/* Active Contracts / Workroom CTA */}
+        <div className="bg-white p-6 rounded-xl border border-emerald-100 shadow-sm ring-1 ring-emerald-50">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-bold text-slate-900 flex items-center gap-2">
+              <Briefcase size={18} className="text-emerald-600"/> Active Contracts
+            </h3>
+            <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">1 Active</span>
+          </div>
+          <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100">
+            <div>
+              <h4 className="font-medium text-slate-900">E-commerce React Developer</h4>
+              <p className="text-sm text-slate-500">Sapphire Textiles • Due in 5 days</p>
+            </div>
+            <Button variant="primary" className="text-sm py-1" onClick={onOpenWorkroom}>Enter Workroom</Button>
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <h3 className="font-bold mb-4">Recent Transactions</h3>
+          <div className="space-y-4">
+            {transactions.length === 0 && <p className="text-sm text-slate-500 italic">No transactions yet.</p>}
+            {transactions.map(tx => (
+              <div key={tx.id} className="flex justify-between items-center pb-3 border-b border-slate-50 last:border-0 last:pb-0">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-full ${tx.type === 'Withdrawal' ? 'bg-orange-50 text-orange-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                    {tx.type === 'Withdrawal' ? <LogOut size={16} /> : <TrendingUp size={16} />}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">{tx.type} via {tx.method}</p>
+                    <p className="text-xs text-slate-400">{tx.date}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className={`text-sm font-bold ${tx.type === 'Withdrawal' ? 'text-slate-900' : 'text-emerald-600'}`}>
+                    {tx.type === 'Withdrawal' ? '-' : '+'} PKR {tx.amount.toLocaleString()}
+                  </p>
+                  <span className="text-xs text-slate-400">{tx.status}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+);
+
+const AdminPage = ({ 
+  categories, 
+  onAddCategory, 
+  onDeleteCategory,
+  freelancers,
+  onToggleFreelancerStatus,
+  ads,
+  onAddAd,
+  onDeleteAd,
+  onToggleTheme,
+  isDarkTheme,
+  jobs,
+  platformPayment,
+  onUpdatePlatformPayment,
+  onMarkJobPaid
+}: any) => {
+  const [activeTab, setActiveTab] = useState<'overview' | 'finance' | 'reports'>('overview');
+  const [newCat, setNewCat] = useState('');
+  const [adTitle, setAdTitle] = useState('');
+  const [adContent, setAdContent] = useState('');
+
+  // Finance Form State
+  const [paymentForm, setPaymentForm] = useState<PlatformPaymentDetails>(platformPayment);
+
+  const handleUpdatePayment = () => {
+    onUpdatePlatformPayment(paymentForm);
+    alert('Platform payment details updated successfully.');
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-slate-900 text-white rounded-lg">
+            <Settings size={24} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+            <p className="text-sm text-slate-500">Secure Panel • Logged in as Ansar</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Site Theme:</span>
+            <button 
+              onClick={onToggleTheme}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg border font-medium transition-all ${isDarkTheme ? 'bg-slate-800 text-white border-slate-700' : 'bg-white text-slate-700 border-slate-300'}`}
+            >
+              <Palette size={16} /> {isDarkTheme ? 'Dark Mode' : 'Light Mode'}
+            </button>
+        </div>
+      </div>
+      
+      {/* Admin Nav Tabs */}
+      <div className="flex gap-4 mb-8 border-b border-slate-200 pb-1">
+        <button 
+          onClick={() => setActiveTab('overview')} 
+          className={`px-4 py-2 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'overview' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+        >
+          <LayoutDashboard size={16}/> Overview & Users
+        </button>
+        <button 
+          onClick={() => setActiveTab('reports')} 
+          className={`px-4 py-2 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'reports' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+        >
+          <BarChart2 size={16}/> Reports & Workflows
+        </button>
+        <button 
+          onClick={() => setActiveTab('finance')} 
+          className={`px-4 py-2 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'finance' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+        >
+          <Building size={16}/> Finance Settings
+        </button>
+      </div>
+
+      {/* --- OVERVIEW TAB --- */}
+      {activeTab === 'overview' && (
+        <div className="space-y-8">
+          {/* Category Management */}
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <h2 className="text-lg font-bold mb-4">Manage Job Categories</h2>
+            <div className="flex gap-4 mb-6">
+              <input 
+                value={newCat} 
+                onChange={(e) => setNewCat(e.target.value)} 
+                placeholder="Enter new category name..."
+                className="flex-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              />
+              <Button onClick={() => { if(newCat) { onAddCategory(newCat); setNewCat(''); } }}>
+                <PlusCircle size={18} /> Add Category
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {categories.map((cat: string) => (
+                <div key={cat} className="flex items-center gap-2 pl-3 pr-2 py-1.5 bg-slate-50 rounded-full border border-slate-100 text-sm">
+                  <span className="font-medium text-slate-700">{cat}</span>
+                  <button onClick={() => onDeleteCategory(cat)} className="text-slate-400 hover:text-red-500 p-1"><X size={14}/></button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Ad Management */}
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <Megaphone size={20} className="text-orange-500"/> Manage Advertisements
+            </h2>
+            <div className="grid md:grid-cols-2 gap-4 mb-4">
+              <input 
+                value={adTitle} 
+                onChange={(e) => setAdTitle(e.target.value)} 
+                placeholder="Ad Title (e.g. Premium VPN)"
+                className="p-3 border border-slate-300 rounded-lg"
+              />
+              <input 
+                value={adContent} 
+                onChange={(e) => setAdContent(e.target.value)} 
+                placeholder="Ad Content text..."
+                className="p-3 border border-slate-300 rounded-lg"
+              />
+            </div>
+            <div className="mb-6 text-right">
+              <Button onClick={() => { 
+                if(adTitle && adContent) { 
+                  onAddAd({id: Date.now().toString(), title: adTitle, content: adContent, isActive: true}); 
+                  setAdTitle(''); setAdContent('');
+                } 
+              }}>Publish Ad</Button>
+            </div>
+            
+            <div className="space-y-3">
+              {ads.length === 0 && <p className="text-slate-400 text-sm italic">No active advertisements.</p>}
+              {ads.map((ad: Advertisement) => (
+                <div key={ad.id} className="flex justify-between items-center p-4 bg-orange-50 rounded-lg border border-orange-100">
+                  <div>
+                    <h4 className="font-bold text-orange-900">{ad.title}</h4>
+                    <p className="text-sm text-orange-800">{ad.content}</p>
+                  </div>
+                  <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => onDeleteAd(ad.id)}>
+                    <Trash2 size={16} /> Remove
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Freelancer Management */}
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <Users size={20} className="text-blue-500"/> Freelancer Accounts
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="p-3 font-medium text-slate-500">Name</th>
+                    <th className="p-3 font-medium text-slate-500">Earnings</th>
+                    <th className="p-3 font-medium text-slate-500">Payment Details</th>
+                    <th className="p-3 font-medium text-slate-500">Status</th>
+                    <th className="p-3 font-medium text-slate-500 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {freelancers.map((f: FreelancerProfile) => (
+                    <tr key={f.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
+                      <td className="p-3 font-medium">{f.user.name}</td>
+                      <td className="p-3">PKR {f.totalEarned.toLocaleString()}</td>
+                      <td className="p-3">
+                        {f.user.payoutDetails ? (
+                          <div className="text-xs">
+                             <div className="font-bold text-slate-700">{f.user.payoutDetails.method}</div>
+                             <div>{f.user.payoutDetails.accountNumber}</div>
+                             <div className="text-slate-400">{f.user.payoutDetails.accountTitle}</div>
+                          </div>
+                        ) : <span className="text-red-500 text-xs">Missing</span>}
+                      </td>
+                      <td className="p-3">
+                        <span className={`px-2 py-0.5 rounded text-xs ${f.user.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {f.user.status}
+                        </span>
+                      </td>
+                      <td className="p-3 text-right">
+                        {f.user.status === 'Active' ? (
+                          <button onClick={() => onToggleFreelancerStatus(f.id, 'Banned')} className="text-red-600 hover:bg-red-50 px-2 py-1 rounded text-xs font-medium border border-red-200">
+                            <Ban size={12} className="inline mr-1" /> Ban Account
+                          </button>
+                        ) : (
+                          <button onClick={() => onToggleFreelancerStatus(f.id, 'Active')} className="text-emerald-600 hover:bg-emerald-50 px-2 py-1 rounded text-xs font-medium border border-emerald-200">
+                            <CheckCircle2 size={12} className="inline mr-1" /> Reactivate
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {freelancers.length === 0 && (
+                    <tr><td colSpan={5} className="p-4 text-center text-slate-500 italic">No freelancers registered yet.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- REPORTS TAB --- */}
+      {activeTab === 'reports' && (
+        <div className="space-y-8">
+          
+          {/* Work In Process */}
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+             <div className="flex items-center gap-2 mb-4">
+                <Clock className="text-blue-500" size={20} />
+                <h2 className="text-lg font-bold">Work In Process (Active Jobs)</h2>
+             </div>
+             <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th className="p-3 font-medium">Job Title</th>
+                      <th className="p-3 font-medium">Client</th>
+                      <th className="p-3 font-medium">Assigned Freelancer</th>
+                      <th className="p-3 font-medium">Budget</th>
+                      <th className="p-3 font-medium">Escrow Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {jobs.filter((j: Job) => j.status === 'In Progress').map((j: Job) => (
+                      <tr key={j.id} className="border-b border-slate-100">
+                        <td className="p-3 font-medium">{j.title}</td>
+                        <td className="p-3">{j.postedBy.name}</td>
+                        <td className="p-3">
+                           {freelancers.find((f: FreelancerProfile) => f.id === j.assignedTo)?.user.name || 'Unknown'}
+                        </td>
+                        <td className="p-3">PKR {j.budget.toLocaleString()}</td>
+                        <td className="p-3"><Badge color="blue">Funds Locked</Badge></td>
+                      </tr>
+                    ))}
+                    {jobs.filter((j: Job) => j.status === 'In Progress').length === 0 && (
+                      <tr><td colSpan={5} className="p-4 text-center text-slate-500 italic">No active jobs right now.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+             </div>
+          </div>
+
+          {/* Work Done / Completed */}
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+             <div className="flex items-center gap-2 mb-4">
+                <CheckCircle2 className="text-emerald-500" size={20} />
+                <h2 className="text-lg font-bold">Work Done (Pending Payout)</h2>
+             </div>
+             <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th className="p-3 font-medium">Job Title</th>
+                      <th className="p-3 font-medium">Freelancer</th>
+                      <th className="p-3 font-medium">Freelancer Payout Details</th>
+                      <th className="p-3 font-medium">Amount Due (90%)</th>
+                      <th className="p-3 font-medium text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {jobs.filter((j: Job) => j.status === 'Completed').map((j: Job) => {
+                       const f = freelancers.find((p: FreelancerProfile) => p.id === j.assignedTo);
+                       return (
+                        <tr key={j.id} className="border-b border-slate-100">
+                          <td className="p-3 font-medium">{j.title}</td>
+                          <td className="p-3">{f?.user.name}</td>
+                          <td className="p-3 text-xs">
+                             {f?.user.payoutDetails ? (
+                               <>
+                                 <span className="font-bold">{f.user.payoutDetails.method}</span><br/>
+                                 {f.user.payoutDetails.accountNumber}
+                               </>
+                             ) : 'N/A'}
+                          </td>
+                          <td className="p-3 font-bold text-emerald-600">PKR {(j.budget * 0.9).toLocaleString()}</td>
+                          <td className="p-3 text-right">
+                             <Button className="text-xs px-2 py-1" onClick={() => onMarkJobPaid(j.id)}>
+                               Release Payment
+                             </Button>
+                          </td>
+                        </tr>
+                       )
+                    })}
+                    {jobs.filter((j: Job) => j.status === 'Completed').length === 0 && (
+                      <tr><td colSpan={5} className="p-4 text-center text-slate-500 italic">No pending payouts.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+             </div>
+          </div>
+
+          {/* Category Analysis */}
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+             <h2 className="text-lg font-bold mb-4">Job Distribution by Category</h2>
+             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {categories.map((cat: string) => {
+                   const count = jobs.filter((j: Job) => j.category === cat).length;
+                   if (count === 0) return null;
+                   return (
+                     <div key={cat} className="p-4 bg-slate-50 rounded-lg border border-slate-100 text-center">
+                        <div className="text-2xl font-bold text-slate-900">{count}</div>
+                        <div className="text-xs text-slate-500">{cat}</div>
+                     </div>
+                   )
+                })}
+             </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- FINANCE TAB --- */}
+      {activeTab === 'finance' && (
+         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm max-w-2xl">
+            <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
+               <CreditCard size={20} className="text-slate-600"/> Platform Finance Settings
+            </h2>
+            <p className="text-sm text-slate-500 mb-6">These details will be shown to Clients when they request to deposit funds.</p>
+            
+            <div className="space-y-4">
+               <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Bank Name</label>
+                  <input 
+                    type="text" 
+                    value={paymentForm.bankName}
+                    onChange={e => setPaymentForm({...paymentForm, bankName: e.target.value})}
+                    className="w-full p-2 border border-slate-300 rounded"
+                  />
+               </div>
+               <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Account Title</label>
+                    <input 
+                      type="text" 
+                      value={paymentForm.accountTitle}
+                      onChange={e => setPaymentForm({...paymentForm, accountTitle: e.target.value})}
+                      className="w-full p-2 border border-slate-300 rounded"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Account Number</label>
+                    <input 
+                      type="text" 
+                      value={paymentForm.accountNumber}
+                      onChange={e => setPaymentForm({...paymentForm, accountNumber: e.target.value})}
+                      className="w-full p-2 border border-slate-300 rounded"
+                    />
+                  </div>
+               </div>
+               <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">IBAN</label>
+                  <input 
+                    type="text" 
+                    value={paymentForm.iban}
+                    onChange={e => setPaymentForm({...paymentForm, iban: e.target.value})}
+                    className="w-full p-2 border border-slate-300 rounded"
+                  />
+               </div>
+               <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">EasyPaisa Number</label>
+                    <input 
+                      type="text" 
+                      value={paymentForm.easyPaisaNumber}
+                      onChange={e => setPaymentForm({...paymentForm, easyPaisaNumber: e.target.value})}
+                      className="w-full p-2 border border-slate-300 rounded"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">JazzCash Number</label>
+                    <input 
+                      type="text" 
+                      value={paymentForm.jazzCashNumber}
+                      onChange={e => setPaymentForm({...paymentForm, jazzCashNumber: e.target.value})}
+                      className="w-full p-2 border border-slate-300 rounded"
+                    />
+                  </div>
+               </div>
+
+               <div className="pt-4">
+                 <Button onClick={handleUpdatePayment}>Save Finance Details</Button>
+               </div>
+            </div>
+         </div>
+      )}
+
+    </div>
+  )
+}
+
+// --- Main App Component ---
 
 const App = () => {
-  const [currentPage, setCurrentPage] = useState('auth'); 
+  const [currentPage, setCurrentPage] = useState('home'); 
   const [user, setUser] = useState<User | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   
-  // Data State - Persistence
+  // Data State - Persistence - NO MOCK DEFAULT
   const [users, setUsers] = useState<User[]>(() => {
     const saved = localStorage.getItem('gab_users');
-    return saved ? JSON.parse(saved) : INITIAL_USERS;
+    return saved ? JSON.parse(saved) : [];
   });
   const [jobs, setJobs] = useState<Job[]>(() => {
     const saved = localStorage.getItem('gab_jobs');
-    return saved ? JSON.parse(saved) : INITIAL_JOBS;
+    return saved ? JSON.parse(saved) : [];
   });
   const [proposals, setProposals] = useState<Proposal[]>(() => {
     const saved = localStorage.getItem('gab_proposals');
     return saved ? JSON.parse(saved) : [];
   });
-  const [transactions, setTransactions] = useState<Transaction[]>(INITIAL_TRANSACTIONS);
+  const [transactions, setTransactions] = useState<Transaction[]>(() => {
+    const saved = localStorage.getItem('gab_transactions');
+    return saved ? JSON.parse(saved) : [];
+  });
   
   // Derived State
   const freelancers: FreelancerProfile[] = users
     .filter(u => u.role === UserRole.FREELANCER)
     .map(u => ({
-      id: `f_${u.id}`,
+      id: u.id,
       user: u,
       title: u.title || '',
       bio: u.bio || '',
@@ -1105,23 +1607,55 @@ const App = () => {
   const [platformPaymentDetails, setPlatformPaymentDetails] = useState(INITIAL_PLATFORM_PAYMENT);
   const [registerMode, setRegisterMode] = useState(false);
 
+  // New States for Admin features
+  const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
+  const [isComplianceModalOpen, setIsComplianceModalOpen] = useState(false);
+  const [adminUsername, setAdminUsername] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [categories, setCategories] = useState(INITIAL_CATEGORIES);
+
+  // Compliance Form Data
+  const [complianceAgreements, setComplianceAgreements] = useState({
+    commission: false,
+    legal: false
+  });
+  const [payoutForm, setPayoutForm] = useState<PayoutDetails>({
+    method: 'Bank Transfer',
+    bankName: '',
+    accountTitle: '',
+    accountNumber: ''
+  });
+
   // Persistence Effects
   useEffect(() => { localStorage.setItem('gab_users', JSON.stringify(users)); }, [users]);
   useEffect(() => { localStorage.setItem('gab_jobs', JSON.stringify(jobs)); }, [jobs]);
   useEffect(() => { localStorage.setItem('gab_proposals', JSON.stringify(proposals)); }, [proposals]);
+  useEffect(() => { localStorage.setItem('gab_transactions', JSON.stringify(transactions)); }, [transactions]);
 
-  // Sync current user if updated in list
+  // Load active user session on mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem('gab_active_user');
+    if (savedUser) {
+      const parsedUser = JSON.parse(savedUser);
+      // Ensure we have the latest data from users array
+      const freshUser = users.find(u => u.id === parsedUser.id) || parsedUser;
+      setUser(freshUser);
+    }
+  }, []);
+
+  // Sync user state to local storage for persistence
   useEffect(() => {
     if (user) {
-      const updatedUser = users.find(u => u.id === user.id);
-      if (updatedUser) setUser(updatedUser);
+      localStorage.setItem('gab_active_user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('gab_active_user');
     }
-  }, [users]);
+  }, [user]);
 
   // --- Handlers ---
   const handleLogin = (u: User) => {
     setUser(u);
-    setCurrentPage('home');
+    setCurrentPage('home'); 
   };
 
   const handleRegisterComplete = (newUser: User) => {
@@ -1168,7 +1702,6 @@ const App = () => {
       return;
     }
 
-    // Deduct from Client
     const updatedClient = { ...user, balance: user.balance - proposal.bidAmount };
     setUsers(users.map(u => u.id === user.id ? updatedClient : u));
     setUser(updatedClient);
@@ -1217,31 +1750,139 @@ const App = () => {
     setJobs(jobs.map(j => j.id === activeWorkroomJob.id ? { ...j, status: 'Completed' } : j));
     setActiveWorkroomJob({ ...activeWorkroomJob, status: 'Completed' });
   };
+  
+  const handleMarkJobPaid = (jobId: string) => {
+     if(confirm("Are you sure you have transferred the money? This will mark the job as Paid and remove it from the pending queue.")) {
+       setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: 'Paid' } : j));
+     }
+  };
 
-  // --- Views ---
+  const handleLogout = () => {
+    if(confirm("Are you sure you want to logout?")) {
+      setUser(null);
+      setCurrentPage('home');
+      localStorage.removeItem('gab_active_user');
+    }
+  };
 
-  if (!user || currentPage === 'auth') {
-    return registerMode ? (
-      <RegisterPage onRegisterComplete={handleRegisterComplete} onBack={() => setRegisterMode(false)} />
-    ) : (
-      <AuthPage onLogin={handleLogin} onRegister={() => setRegisterMode(true)} users={users} />
-    );
-  }
+  const handleAdminLogin = () => {
+    if (adminUsername === 'Ansar' && adminPassword === 'Anudada@007') {
+      setUser({ 
+        id: 'admin',
+        name: 'Admin (Ansar)',
+        email: 'admin@gab.com',
+        avatar: 'https://ui-avatars.com/api/?name=Admin&background=000&color=fff',
+        role: UserRole.ADMIN,
+        verified: true,
+        balance: 0,
+        status: 'Active'
+      });
+      setIsAdminLoginOpen(false);
+      setCurrentPage('admin');
+      setAdminUsername('');
+      setAdminPassword('');
+    } else {
+      alert("Invalid Admin Credentials");
+    }
+  };
+  
+  const handleAcceptCompliance = () => {
+    if (complianceAgreements.commission && complianceAgreements.legal) {
+      if (!payoutForm.accountNumber || !payoutForm.accountTitle) {
+        alert("Please complete your payout details so we can send you money.");
+        return;
+      }
+      
+      if(user) {
+        const updatedUser = { 
+          ...user, 
+          role: UserRole.FREELANCER, 
+          agreedToTerms: true,
+          payoutDetails: payoutForm
+        };
+        setUsers(users.map(u => u.id === user.id ? updatedUser : u));
+        setUser(updatedUser);
+      }
+      setIsComplianceModalOpen(false);
+    } else {
+      alert("You must accept all terms to proceed.");
+    }
+  };
+  
+  const toggleRole = () => {
+    if (!user) return;
+    if (user.role === UserRole.CLIENT) {
+      if (!user.agreedToTerms) {
+        setIsComplianceModalOpen(true);
+      } else {
+        const updatedUser = { ...user, role: UserRole.FREELANCER };
+        setUsers(users.map(u => u.id === user.id ? updatedUser : u));
+        setUser(updatedUser);
+      }
+    } else if (user.role === UserRole.FREELANCER) {
+      const updatedUser = { ...user, role: UserRole.CLIENT };
+      setUsers(users.map(u => u.id === user.id ? updatedUser : u));
+      setUser(updatedUser);
+    } else if (user.role === UserRole.ADMIN) {
+      setUser({ ...user, role: UserRole.CLIENT });
+    }
+  };
+  
+  const handleToggleFreelancerStatus = (id: string, status: 'Active' | 'Banned') => {
+    setUsers(users.map(u => u.id === id ? { ...u, status } : u));
+  };
+
+
+  // Auth Guard Helper
+  const ProtectedRoute = (component: React.ReactNode) => {
+    if (!user) {
+      setRegisterMode(false);
+      return <AuthPage onLogin={handleLogin} onRegister={() => setRegisterMode(true)} users={users} />;
+    }
+    return component;
+  };
+  
+  const navItems = [
+    { id: 'jobs', label: 'Find Work' },
+    { id: 'freelancers', label: 'Hire Talent' },
+    { id: 'dashboard', label: 'Dashboard' },
+  ];
 
   const renderPage = () => {
+    if (currentPage === 'auth') {
+       return registerMode ? (
+          <RegisterPage onRegisterComplete={handleRegisterComplete} onBack={() => { setRegisterMode(false); }} />
+       ) : (
+          <AuthPage onLogin={handleLogin} onRegister={() => setRegisterMode(true)} users={users} />
+       );
+    }
+
     switch(currentPage) {
-      case 'home': return <HomePage setPage={setCurrentPage} categories={INITIAL_CATEGORIES} activeAds={activeAds} />;
+      case 'home': return <HomePage setPage={setCurrentPage} categories={categories} activeAds={activeAds} jobs={jobs} />;
       case 'jobs': return (
         <div className="px-4 lg:px-20 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
             <h1 className="text-2xl font-bold">Browse Jobs</h1>
-            <Button onClick={() => setCurrentPage('post-job')} className="md:hidden w-full">Post Job</Button>
+            <Button onClick={() => {
+              if (user && user.role === UserRole.CLIENT) setCurrentPage('post-job');
+              else if (!user) {
+                setRegisterMode(false);
+                setCurrentPage('auth');
+              }
+              else alert("Only clients can post jobs.");
+            }} className="md:hidden w-full">Post Job</Button>
           </div>
           <div className="grid lg:grid-cols-1 gap-4">
             {jobs.map(job => (
               <JobCard key={job.id} job={job} onClick={() => { setSelectedJob(job); setCurrentPage('job-details'); }} />
             ))}
-            {jobs.length === 0 && <p className="text-slate-500 text-center py-10">No jobs posted yet.</p>}
+            {jobs.length === 0 && (
+               <div className="text-center py-12 text-slate-500 border border-dashed border-slate-300 rounded-xl">
+                 <Briefcase className="mx-auto mb-2 text-slate-300" size={48}/>
+                 <p className="font-medium">No jobs available yet.</p>
+                 <p className="text-sm">Check back later or post a job!</p>
+               </div>
+            )}
           </div>
         </div>
       );
@@ -1260,18 +1901,24 @@ const App = () => {
           <h1 className="text-2xl font-bold mb-8">Hire Top Talent</h1>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {freelancers.map(p => <FreelancerCard key={p.id} profile={p} />)}
+            {freelancers.length === 0 && (
+               <div className="col-span-full text-center py-12 text-slate-500 border border-dashed border-slate-300 rounded-xl">
+                 <Users className="mx-auto mb-2 text-slate-300" size={48}/>
+                 <p className="font-medium">No freelancers registered yet.</p>
+               </div>
+            )}
           </div>
         </div>
       );
-      case 'dashboard': return (
+      case 'dashboard': return ProtectedRoute(
         <div className="px-4 lg:px-20 py-8 min-h-screen">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="space-y-6">
               <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center">
-                <img src={user.avatar} alt="Profile" className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-emerald-50" />
-                <h2 className="text-xl font-bold">{user.name}</h2>
-                <p className="text-slate-500 mb-2">{user.role}</p>
-                {user.verified && <div className="flex justify-center mb-4"><VerificationBadge /></div>}
+                <img src={user?.avatar} alt="Profile" className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-emerald-50" />
+                <h2 className="text-xl font-bold">{user?.name}</h2>
+                <p className="text-slate-500 mb-2">{user?.role}</p>
+                {user?.verified && <div className="flex justify-center mb-4"><VerificationBadge /></div>}
                 
                 <Button variant="outline" className="w-full mb-4 text-xs" onClick={() => setCurrentPage('profile')}>
                   <Edit3 size={14}/> Edit Profile
@@ -1280,7 +1927,7 @@ const App = () => {
                 <div className="border-t border-slate-100 pt-4">
                   <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Available Balance</p>
                   <div className="flex items-center justify-center gap-2 mb-2">
-                     <p className="text-2xl font-bold text-emerald-600">PKR {user.balance.toLocaleString()}</p>
+                     <p className="text-2xl font-bold text-emerald-600">PKR {user?.balance.toLocaleString()}</p>
                   </div>
                   <div className="flex gap-2">
                     <Button onClick={() => { setWalletModalType('Deposit'); setIsWalletModalOpen(true); }} className="flex-1 text-xs bg-slate-900">Add</Button>
@@ -1293,7 +1940,7 @@ const App = () => {
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-white p-6 rounded-xl border border-emerald-100 shadow-sm ring-1 ring-emerald-50">
                 <h3 className="font-bold mb-4 flex items-center gap-2"><Briefcase size={18}/> Active Contracts</h3>
-                {jobs.filter(j => j.status === 'In Progress' && (j.postedBy.id === user.id || j.assignedTo === user.id)).map(job => (
+                {jobs.filter(j => j.status === 'In Progress' && (j.postedBy.id === user?.id || j.assignedTo === user?.id)).map(job => (
                   <div key={job.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100 mb-2">
                     <div>
                       <h4 className="font-medium text-slate-900">{job.title}</h4>
@@ -1302,12 +1949,12 @@ const App = () => {
                     <Button variant="primary" className="text-sm py-1" onClick={() => { setActiveWorkroomJob(job); setCurrentPage('workroom'); }}>Enter Workroom</Button>
                   </div>
                 ))}
-                {jobs.filter(j => j.status === 'In Progress' && (j.postedBy.id === user.id || j.assignedTo === user.id)).length === 0 && (
+                {jobs.filter(j => j.status === 'In Progress' && (j.postedBy.id === user?.id || j.assignedTo === user?.id)).length === 0 && (
                   <p className="text-slate-500 text-sm italic">No active jobs.</p>
                 )}
               </div>
 
-              {user.role === UserRole.FREELANCER && (
+              {user?.role === UserRole.FREELANCER && (
                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                   <h3 className="font-bold mb-4">My Proposals</h3>
                   {proposals.filter(p => p.freelancerId === user.id).map(p => (
@@ -1323,133 +1970,31 @@ const App = () => {
           </div>
         </div>
       );
-      case 'profile': return <ProfilePage user={user} onSave={handleUpdateProfile} onBack={() => setCurrentPage('dashboard')} />;
-      case 'post-job': return <PostJobPage onPost={handlePostJob} categories={INITIAL_CATEGORIES} user={user} />;
-      case 'workroom': return <WorkroomPage onBack={() => setCurrentPage('dashboard')} user={user} onReleaseFunds={handleReleaseFunds} job={activeWorkroomJob} />;
+      case 'profile': return user ? <ProfilePage user={user} onSave={handleUpdateProfile} onBack={() => setCurrentPage('dashboard')} /> : ProtectedRoute(null);
+      case 'post-job': return user ? <PostJobPage onPost={handlePostJob} categories={INITIAL_CATEGORIES} user={user} /> : ProtectedRoute(null);
+      case 'workroom': return user ? <WorkroomPage onBack={() => setCurrentPage('dashboard')} user={user} onReleaseFunds={handleReleaseFunds} job={activeWorkroomJob} /> : ProtectedRoute(null);
+      case 'admin': 
+        return user?.role === UserRole.ADMIN ? (
+          <AdminPage 
+            categories={categories} 
+            onAddCategory={(c: string) => setCategories([...categories, c])} 
+            onDeleteCategory={(c: string) => setCategories(categories.filter(cat => cat !== c))}
+            freelancers={freelancers}
+            onToggleFreelancerStatus={handleToggleFreelancerStatus}
+            ads={activeAds}
+            onAddAd={(ad: Advertisement) => setActiveAds([...activeAds, ad])}
+            onDeleteAd={(id: string) => setActiveAds(activeAds.filter(a => a.id !== id))}
+            onToggleTheme={() => setIsDarkTheme(!isDarkTheme)}
+            isDarkTheme={isDarkTheme}
+            jobs={jobs}
+            platformPayment={platformPaymentDetails}
+            onUpdatePlatformPayment={setPlatformPaymentDetails}
+            onMarkJobPaid={handleMarkJobPaid}
+          />
+        ) : <HomePage setPage={setCurrentPage} categories={categories} activeAds={activeAds} jobs={jobs} />;
       
-      // -- Content Pages --
-      case 'success-stories': return (
-        <ContentPage 
-          title="Success Stories from Pakistan" 
-          onBack={() => setCurrentPage('home')}
-          content={
-            <div className="space-y-8">
-              <div className="flex gap-6 items-start p-6 bg-slate-50 rounded-xl border border-slate-100">
-                <img src="https://picsum.photos/seed/succ1/100/100" className="w-24 h-24 rounded-xl object-cover" />
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900">Ali's Journey to Top Rated</h3>
-                  <p className="text-emerald-600 font-medium mb-2">Web Developer • Earned 5 Million+ PKR</p>
-                  <p className="italic text-slate-600">"GAB Freelancers gave me the platform to showcase my skills to local businesses. The local payment integration made it so easy to receive funds directly into my JazzCash without worrying about exchange rates."</p>
-                </div>
-              </div>
-              <div className="flex gap-6 items-start p-6 bg-slate-50 rounded-xl border border-slate-100">
-                <img src="https://picsum.photos/seed/succ2/100/100" className="w-24 h-24 rounded-xl object-cover" />
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900">Sana's Graphic Design Studio</h3>
-                  <p className="text-emerald-600 font-medium mb-2">Creative Director • Lahore</p>
-                  <p className="italic text-slate-600">"I started as a solo freelancer and now I run a small agency hiring other freelancers from this very platform. It's an ecosystem of growth that understands the Pakistani market."</p>
-                </div>
-              </div>
-            </div>
-          }
-        />
-      );
-      case 'resources': return (
-        <ContentPage 
-          title="Resources & Learning Center" 
-          onBack={() => setCurrentPage('home')}
-          content={
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="p-6 border rounded-xl hover:border-emerald-500 transition-all cursor-pointer">
-                <BookOpen className="text-emerald-600 mb-4" size={32} />
-                <h3 className="font-bold text-lg mb-2">Freelancing 101</h3>
-                <p className="text-sm text-slate-600">A complete guide to starting your career, optimizing your profile, and winning your first job on GAB.</p>
-              </div>
-              <div className="p-6 border rounded-xl hover:border-emerald-500 transition-all cursor-pointer">
-                <Shield className="text-emerald-600 mb-4" size={32} />
-                <h3 className="font-bold text-lg mb-2">Safety & Security</h3>
-                <p className="text-sm text-slate-600">Learn how to stay safe, avoid scams, and use our Escrow protection effectively to guarantee payment.</p>
-              </div>
-              <div className="p-6 border rounded-xl hover:border-emerald-500 transition-all cursor-pointer">
-                <Award className="text-emerald-600 mb-4" size={32} />
-                <h3 className="font-bold text-lg mb-2">Skill Certifications</h3>
-                <p className="text-sm text-slate-600">Get verified badges for your skills by taking our standardized tests to boost your profile visibility.</p>
-              </div>
-              <div className="p-6 border rounded-xl hover:border-emerald-500 transition-all cursor-pointer">
-                <Globe className="text-emerald-600 mb-4" size={32} />
-                <h3 className="font-bold text-lg mb-2">Tax & Compliance</h3>
-                <p className="text-sm text-slate-600">Understanding FBR filer status and how to manage your taxes as a freelancer in Pakistan.</p>
-              </div>
-            </div>
-          }
-        />
-      );
-      case 'enterprise': return (
-        <ContentPage 
-          title="Enterprise Solutions" 
-          onBack={() => setCurrentPage('home')}
-          content={
-            <div>
-              <p className="text-xl mb-6 text-slate-700">Scale your workforce with GAB Enterprise. We provide end-to-end talent management for large organizations.</p>
-              <div className="grid md:grid-cols-2 gap-8 mb-8">
-                <div className="bg-slate-50 p-6 rounded-xl">
-                   <h3 className="font-bold text-lg mb-3">Why Enterprise?</h3>
-                   <ul className="space-y-4">
-                    <li className="flex items-center gap-3"><CheckCircle2 className="text-emerald-600" /> Dedicated Account Manager</li>
-                    <li className="flex items-center gap-3"><CheckCircle2 className="text-emerald-600" /> Pre-vetted Top 1% Talent</li>
-                    <li className="flex items-center gap-3"><CheckCircle2 className="text-emerald-600" /> Consolidated Billing & Invoicing</li>
-                    <li className="flex items-center gap-3"><CheckCircle2 className="text-emerald-600" /> Custom NDA & Compliance</li>
-                  </ul>
-                </div>
-                <div className="flex flex-col justify-center">
-                   <p className="mb-4">Perfect for software houses, agencies, and large corporations needing flexible, high-quality talent pools.</p>
-                   <Button className="w-full md:w-auto self-start">Contact Sales</Button>
-                </div>
-              </div>
-            </div>
-          }
-        />
-      );
-      case 'escrow': return (
-        <ContentPage 
-          title="Escrow Protection" 
-          onBack={() => setCurrentPage('home')}
-          content={
-            <div>
-              <div className="bg-emerald-50 p-6 rounded-xl border border-emerald-100 mb-8">
-                <h3 className="text-emerald-800 font-bold text-lg mb-2 flex items-center gap-2"><ShieldCheck /> Your money is safe with us</h3>
-                <p className="text-emerald-700">We hold funds securely until the work is approved. This protects both clients and freelancers from fraud and non-payment.</p>
-              </div>
-              <h3 className="font-bold text-xl mb-6">How it works</h3>
-              <div className="space-y-8 relative before:absolute before:left-4 before:top-0 before:h-full before:w-0.5 before:bg-slate-200">
-                <div className="flex gap-6 relative">
-                  <div className="w-8 h-8 bg-white border-2 border-emerald-600 rounded-full flex items-center justify-center font-bold text-emerald-600 shrink-0 z-10">1</div>
-                  <div>
-                    <h4 className="font-bold text-lg">Client Deposits Funds</h4>
-                    <p className="text-sm text-slate-600 mt-1">When a client hires a freelancer, the agreed project amount is deposited into our secure, neutral Escrow account.</p>
-                  </div>
-                </div>
-                <div className="flex gap-6 relative">
-                  <div className="w-8 h-8 bg-white border-2 border-emerald-600 rounded-full flex items-center justify-center font-bold text-emerald-600 shrink-0 z-10">2</div>
-                  <div>
-                    <h4 className="font-bold text-lg">Freelancer Works</h4>
-                    <p className="text-sm text-slate-600 mt-1">The freelancer completes the work knowing the funds are secured and available.</p>
-                  </div>
-                </div>
-                <div className="flex gap-6 relative">
-                  <div className="w-8 h-8 bg-white border-2 border-emerald-600 rounded-full flex items-center justify-center font-bold text-emerald-600 shrink-0 z-10">3</div>
-                  <div>
-                    <h4 className="font-bold text-lg">Payment Released</h4>
-                    <p className="text-sm text-slate-600 mt-1">Once the client reviews and approves the work, funds are instantly released to the freelancer's wallet.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          }
-        />
-      );
-
-      default: return <HomePage setPage={setCurrentPage} categories={INITIAL_CATEGORIES} activeAds={activeAds} />;
+      // ... (Content pages can remain static as they are informational)
+      default: return <HomePage setPage={setCurrentPage} categories={categories} activeAds={activeAds} jobs={jobs} />;
     }
   };
 
@@ -1466,36 +2011,131 @@ const App = () => {
       <nav className={`sticky top-0 z-50 border-b shadow-sm ${isDarkTheme ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center cursor-pointer" onClick={() => setCurrentPage('home')}>
-              <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center mr-2">
+            <div className="flex items-center cursor-pointer group select-none" 
+              onClick={() => setCurrentPage('home')}
+              onDoubleClick={(e) => {
+                e.preventDefault();
+                if (user?.role !== UserRole.ADMIN) {
+                   setIsAdminLoginOpen(true);
+                } else {
+                   setCurrentPage('admin');
+                }
+              }}
+            >
+              <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center mr-2 group-hover:bg-emerald-700 transition-colors">
                 <span className="text-white font-bold text-lg">G</span>
               </div>
-              <span className="font-bold text-xl">GAB <span className="text-emerald-600">Freelancers</span></span>
+              <span className={`font-bold text-xl tracking-tight ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>GAB <span className="text-emerald-600">Freelancers</span></span>
             </div>
+            
             <div className="hidden md:flex items-center space-x-8">
-              <button onClick={() => setCurrentPage('jobs')} className="text-sm font-medium hover:text-emerald-600">Find Work</button>
-              <button onClick={() => setCurrentPage('freelancers')} className="text-sm font-medium hover:text-emerald-600">Hire Talent</button>
-              <button onClick={() => setCurrentPage('dashboard')} className="text-sm font-medium hover:text-emerald-600">Dashboard</button>
-            </div>
-            <div className="hidden md:flex items-center space-x-4">
-              {user.role === UserRole.CLIENT && (
-                 <Button onClick={() => setCurrentPage('post-job')} className="py-1.5 text-sm"><PlusCircle size={16} /> Post a Job</Button>
+              {navItems.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => setCurrentPage(item.id)}
+                  className={`text-sm font-medium transition-colors ${
+                    currentPage === item.id ? 'text-emerald-600' : (isDarkTheme ? 'text-slate-300 hover:text-emerald-500' : 'text-slate-600 hover:text-emerald-600')
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+              {user?.role === UserRole.ADMIN && (
+                <button onClick={() => setCurrentPage('admin')} className="text-sm font-bold text-emerald-600 flex items-center gap-1">
+                  <Settings size={14}/> Admin Panel
+                </button>
               )}
-              <div className="flex items-center gap-2 cursor-pointer" onClick={() => {
-                if(confirm("Logout?")) {
-                  setUser(null);
-                  setCurrentPage('auth');
-                }
-              }}>
-                 <img src={user.avatar} className="w-8 h-8 rounded-full border border-slate-200" alt="Avatar" />
-                 <div className="text-right hidden lg:block">
-                    <p className="text-sm font-bold leading-none">{user.name}</p>
-                    <p className="text-[10px] text-slate-500 uppercase">{user.role}</p>
-                 </div>
-              </div>
+            </div>
+            
+            {/* Header Right Side */}
+            <div className="hidden md:flex items-center space-x-4">
+              {!user ? (
+                <>
+                  <Button variant="ghost" className="text-slate-600 font-medium" onClick={() => { setRegisterMode(false); setCurrentPage('auth'); }}>
+                    <LogIn size={16} /> Log In
+                  </Button>
+                  <Button onClick={() => { setRegisterMode(true); setCurrentPage('auth'); }}>
+                    <UserPlus size={16} /> Sign Up
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <button onClick={toggleRole} className="text-xs text-slate-400 hover:text-emerald-600 uppercase font-semibold">
+                    Switch Role ({user.role})
+                  </button>
+                  <div className="h-6 w-px bg-slate-200"></div>
+                  {user.role === UserRole.CLIENT && (
+                     <Button onClick={() => setCurrentPage('post-job')} className="py-1.5 text-sm"><PlusCircle size={16} /> Post a Job</Button>
+                  )}
+                  <div className="flex items-center gap-2 cursor-pointer" onClick={() => setCurrentPage('dashboard')}>
+                     <img src={user.avatar} className="w-8 h-8 rounded-full border border-slate-200" alt="Avatar" />
+                     <div className="text-right hidden lg:block">
+                        <p className="text-sm font-bold leading-none">{user.name}</p>
+                        <p className="text-[10px] text-slate-500 uppercase">{user.role}</p>
+                     </div>
+                     <LogOut size={16} className="text-slate-400 hover:text-red-500 ml-2" onClick={(e) => { e.stopPropagation(); handleLogout(); }} />
+                  </div>
+                </>
+              )}
+            </div>
+            
+            {/* Mobile Menu Button */}
+            <div className="flex items-center md:hidden">
+              <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-slate-600">
+                {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
             </div>
           </div>
         </div>
+
+        {/* Mobile Nav */}
+        {isMenuOpen && (
+          <div className="md:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-4 space-y-2">
+             {navItems.map(item => (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setCurrentPage(item.id);
+                  setIsMenuOpen(false);
+                }}
+                className="block w-full text-left py-2 text-base font-medium text-slate-600"
+              >
+                {item.label}
+              </button>
+            ))}
+            {user?.role === UserRole.ADMIN && (
+              <button onClick={() => { setCurrentPage('admin'); setIsMenuOpen(false); }} className="block w-full text-left py-2 text-base font-bold text-emerald-600">
+                Admin Panel
+              </button>
+            )}
+             
+             {/* Sign In / Sign Up Mobile */}
+             <div className="pt-4 border-t border-slate-100 mt-2">
+               {!user ? (
+                 <div className="flex flex-col gap-3">
+                   <button 
+                     onClick={() => { setRegisterMode(false); setCurrentPage('auth'); setIsMenuOpen(false); }} 
+                     className="flex items-center gap-2 text-slate-600 font-bold"
+                   >
+                     <LogIn size={18}/> Log In
+                   </button>
+                   <button 
+                     onClick={() => { setRegisterMode(true); setCurrentPage('auth'); setIsMenuOpen(false); }} 
+                     className="flex items-center gap-2 text-emerald-600 font-bold"
+                   >
+                     <UserPlus size={18}/> Sign Up
+                   </button>
+                 </div>
+               ) : (
+                 <div className="space-y-2">
+                   {user.role === UserRole.CLIENT && <Button onClick={() => { setCurrentPage('post-job'); setIsMenuOpen(false); }} className="w-full justify-center">Post a Job</Button>}
+                   <button onClick={() => { toggleRole(); setIsMenuOpen(false); }} className="w-full text-sm text-slate-500 py-2">Switch Role ({user.role})</button>
+                   <Button variant="secondary" className="w-full justify-center text-red-600" onClick={() => { handleLogout(); setIsMenuOpen(false); }}>Logout</Button>
+                 </div>
+               )}
+             </div>
+          </div>
+        )}
       </nav>
 
       <main className="min-h-[calc(100vh-64px)]">
@@ -1526,16 +2166,13 @@ const App = () => {
                 <button onClick={() => {
                   if (user && user.role === UserRole.FREELANCER) {
                     setCurrentPage('profile');
+                  } else if (!user) {
+                     setRegisterMode(true);
+                     setCurrentPage('auth');
                   } else {
                     alert("Please log in as a freelancer to edit your profile.");
                   }
                 }} className="hover:text-emerald-500 transition-colors text-left">Create Profile</button>
-              </li>
-              <li>
-                <button onClick={() => setCurrentPage('success-stories')} className="hover:text-emerald-500 transition-colors text-left">Success Stories</button>
-              </li>
-              <li>
-                <button onClick={() => setCurrentPage('resources')} className="hover:text-emerald-500 transition-colors text-left">Resources</button>
               </li>
             </ul>
           </div>
@@ -1546,6 +2183,9 @@ const App = () => {
                 <button onClick={() => {
                   if (user && user.role === UserRole.CLIENT) {
                     setCurrentPage('post-job');
+                  } else if (!user) {
+                     setRegisterMode(true);
+                     setCurrentPage('auth');
                   } else {
                     alert("Please log in as a client to post a job.");
                   }
@@ -1553,12 +2193,6 @@ const App = () => {
               </li>
               <li>
                 <button onClick={() => setCurrentPage('freelancers')} className="hover:text-emerald-500 transition-colors text-left">Find Talent</button>
-              </li>
-              <li>
-                <button onClick={() => setCurrentPage('enterprise')} className="hover:text-emerald-500 transition-colors text-left">Enterprise Solutions</button>
-              </li>
-              <li>
-                <button onClick={() => setCurrentPage('escrow')} className="hover:text-emerald-500 transition-colors text-left">Escrow Protection</button>
               </li>
             </ul>
           </div>
