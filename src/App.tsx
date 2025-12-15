@@ -8,14 +8,10 @@ import {
   Menu, 
   X, 
   LogOut,
-  Wallet,
-  TrendingUp,
   ShieldCheck,
   ChevronLeft,
   Send,
-  Paperclip,
   CheckCircle2,
-  FileText,
   Clock,
   Trash2,
   Settings,
@@ -37,15 +33,14 @@ import {
   UserPlus,
   Camera,
   FileBadge,
-  Star
+  TrendingUp
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-import { JobCard, FreelancerCard, Button, VerificationBadge, PaymentMethodBadge, Badge } from './components/UIComponents';
+import { JobCard, FreelancerCard, Button, VerificationBadge, Badge } from './components/UIComponents';
 import type { Job, FreelancerProfile, User, Transaction, Advertisement, PayoutDetails, PlatformPaymentDetails, Proposal } from './types';
 import { UserRole } from './types';
 import { generateJobDescription } from './services/geminiService';
-import { AuthPage, RegisterPage } from './auth/Enhanced_Auth_Registration';
 
 // --- Constants & Mock Data ---
 
@@ -71,24 +66,6 @@ const INITIAL_PLATFORM_PAYMENT: PlatformPaymentDetails = {
   jazzCashNumber: '0300-7654321'
 };
 
-const MOCK_USER: User = {
-  id: 'u1',
-  name: 'Ahmed Hassan',
-  email: 'ahmed@example.com',
-  avatar: 'https://ui-avatars.com/api/?name=Ahmed+Hassan&background=random',
-  role: UserRole.FREELANCER,
-  verified: true,
-  balance: 154000,
-  status: 'Active',
-  agreedToTerms: true,
-  payoutDetails: {
-    method: 'Bank Transfer',
-    bankName: 'HBL',
-    accountTitle: 'Ahmed Hassan',
-    accountNumber: '1234567890'
-  }
-};
-
 const INITIAL_JOBS: Job[] = [
   {
     id: 'j1',
@@ -96,7 +73,15 @@ const INITIAL_JOBS: Job[] = [
     description: 'We need an experienced React developer to build a clothing store frontend. Must integrate with JazzCash payment gateway API. The design is ready in Figma.\n\nResponsibilities:\n- Convert Figma designs to React components\n- Integrate JazzCash/EasyPaisa APIs\n- Ensure mobile responsiveness\n\nRequirements:\n- 3+ years React experience\n- Portfolio of e-commerce sites\n- Based in Pakistan for occasional syncs',
     budget: 150000,
     currency: 'PKR',
-    postedBy: { ...MOCK_USER, id: 'c1', name: 'Sapphire Textiles', email: 'hr@sapphire.com', role: UserRole.CLIENT, avatar: 'https://ui-avatars.com/api/?name=Sapphire+Textiles&background=random' },
+    postedBy: { 
+      id: 'c1', 
+      name: 'Sapphire Textiles', 
+      email: 'hr@sapphire.pk', 
+      role: UserRole.CLIENT, 
+      verified: true, 
+      avatar: '', 
+      balance: 0 
+    },
     postedAt: new Date().toISOString(),
     category: 'Web Development',
     type: 'Fixed Price',
@@ -110,27 +95,21 @@ const INITIAL_JOBS: Job[] = [
     description: 'Looking for a native Urdu speaker who understands technology terms. You will translate and write 5 articles per week about latest gadgets and software.\n\nMust have strong command over Urdu grammar and technical vocabulary.',
     budget: 5000,
     currency: 'PKR',
-    postedBy: { ...MOCK_USER, id: 'c2', name: 'TechPakistan', email: 'editor@techpakistan.com', role: UserRole.CLIENT, avatar: 'https://ui-avatars.com/api/?name=Tech+Pakistan&background=random' },
+    postedBy: { 
+      id: 'c2', 
+      name: 'TechPakistan', 
+      email: 'jobs@techpakistan.pk',
+      role: UserRole.CLIENT, 
+      verified: true, 
+      avatar: '', 
+      balance: 0 
+    },
     postedAt: new Date(Date.now() - 86400000).toISOString(),
     category: 'Content Writing',
     type: 'Fixed Price',
     applicants: 45,
     status: 'Open'
   },
-  {
-    id: 'j3',
-    title: 'Tax Filing Assistant for Small Business',
-    description: 'Need a certified tax practitioner to help file annual returns for a small software house in Islamabad. Must be familiar with FBR portal and IT export tax exemptions.',
-    budget: 15000,
-    currency: 'PKR',
-    postedBy: { ...MOCK_USER, id: 'c3', name: 'SoftSync Solutions', email: 'accounts@softsync.pk', role: UserRole.CLIENT, avatar: 'https://ui-avatars.com/api/?name=SoftSync&background=random' },
-    postedAt: new Date(Date.now() - 172800000).toISOString(),
-    category: 'Tax Services',
-    type: 'Fixed Price',
-    applicants: 5,
-    status: 'Completed',
-    assignedTo: 'f2'
-  }
 ];
 
 const INITIAL_FREELANCERS: FreelancerProfile[] = [
@@ -158,32 +137,6 @@ const INITIAL_FREELANCERS: FreelancerProfile[] = [
     rating: 4.9,
     jobsCompleted: 42,
     totalEarned: 2500000
-  },
-  {
-    id: 'f2',
-    user: { 
-      id: 'u3', 
-      name: 'Bilal Khan', 
-      email: 'bilal@example.com',
-      avatar: 'https://ui-avatars.com/api/?name=Bilal+Khan&background=random', 
-      role: UserRole.FREELANCER, 
-      verified: false, 
-      balance: 0, 
-      status: 'Active',
-      payoutDetails: {
-        method: 'Bank Transfer',
-        bankName: 'Bank Alfalah',
-        accountTitle: 'Bilal Khan',
-        accountNumber: 'PK00BAFL000000001'
-      }
-    },
-    title: 'Corporate Tax Consultant',
-    bio: 'FBR registered tax practitioner helping freelancers and businesses save money and stay compliant.',
-    hourlyRate: 5000,
-    skills: ['Tax Filing', 'FBR', 'Corporate Law', 'Bookkeeping'],
-    rating: 5.0,
-    jobsCompleted: 120,
-    totalEarned: 4500000
   }
 ];
 
@@ -199,10 +152,310 @@ const MOCK_EARNINGS = [
 const INITIAL_TRANSACTIONS: Transaction[] = [
   { id: 't1', date: '2023-06-15', amount: 25000, type: 'Withdrawal', method: 'JazzCash', status: 'Completed' },
   { id: 't2', date: '2023-06-10', amount: 50000, type: 'Payment', method: 'Bank Transfer', status: 'Completed' },
-  { id: 't3', date: '2023-06-01', amount: 15000, type: 'Withdrawal', method: 'EasyPaisa', status: 'Completed' },
 ];
 
-// --- Components ---
+// --- Authentication Components ---
+
+const AuthPage = ({ onLogin, onRegister, users }: { onLogin: (u: User) => void, onRegister: () => void, users: User[] }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleLogin = () => {
+    // Basic auth check against registered users
+    if (email === 'demo@gab.com' && password === 'demo123') {
+       onLogin({
+         id: 'demo1',
+         name: 'Demo User',
+         email: 'demo@gab.com',
+         avatar: 'https://ui-avatars.com/api/?name=Demo+User&background=0D9488&color=fff',
+         role: UserRole.FREELANCER,
+         verified: true,
+         balance: 5000,
+         status: 'Active'
+       });
+       return;
+    }
+
+    const user = users.find(u => u.email === email && u.password === password);
+    if (user) {
+      onLogin(user);
+    } else {
+      // Admin Backdoor
+      if (email === 'admin@gab.com' && password === 'admin123') {
+         const adminUser: User = {
+           id: 'admin1',
+           name: 'System Admin',
+           email: 'admin@gab.com',
+           avatar: 'https://ui-avatars.com/api/?name=Admin&background=000&color=fff',
+           role: UserRole.ADMIN,
+           verified: true,
+           balance: 0,
+           status: 'Active'
+         };
+         onLogin(adminUser);
+         return;
+      }
+      setError('Invalid email or password. Try demo@gab.com / demo123');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="bg-white p-8 rounded-2xl w-full max-w-md shadow-xl border border-slate-200">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-emerald-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-200">
+            <span className="text-white font-bold text-3xl">G</span>
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900">Welcome Back</h1>
+          <p className="text-slate-500 mt-2">Login to GAB Freelancers</p>
+        </div>
+
+        {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-4 text-center">{error}</div>}
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input 
+                type="email" 
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                placeholder="name@example.com"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+            <div className="relative">
+              <Key className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input 
+                type="password" 
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+          <Button onClick={handleLogin} className="w-full py-3 text-lg">Login</Button>
+        </div>
+
+        <div className="mt-6 text-center text-sm">
+          <span className="text-slate-500">Don't have an account? </span>
+          <button onClick={onRegister} className="text-emerald-600 font-bold hover:underline">Create Account</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const RegisterPage = ({ onRegisterComplete, onBack }: { onRegisterComplete: (u: User) => void, onBack: () => void }) => {
+  const [step, setStep] = useState(1);
+  const [role, setRole] = useState<UserRole>(UserRole.FREELANCER);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    title: '',
+    skills: '',
+    hourlyRate: '',
+    bio: '',
+    cnic: '',
+    cnicFront: null as File | null,
+    cnicBack: null as File | null
+  });
+
+  const handleRegister = () => {
+    if (!formData.name || !formData.email || !formData.password) {
+      alert("Please fill in basic details");
+      return;
+    }
+
+    if (role === UserRole.FREELANCER) {
+      if (!formData.title || !formData.skills) {
+        alert("Please fill in your professional profile");
+        return;
+      }
+      if (!formData.cnic || !formData.cnicFront || !formData.cnicBack) {
+        alert("Please complete NADRA Verification (Step 3)");
+        return;
+      }
+    }
+
+    const newUser: User = {
+      id: Date.now().toString(),
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      avatar: `https://ui-avatars.com/api/?name=${formData.name}&background=random`,
+      role: role,
+      verified: role === UserRole.FREELANCER ? false : true,
+      balance: 0,
+      status: 'Active',
+      agreedToTerms: true,
+      title: formData.title,
+      skills: formData.skills.split(',').map(s => s.trim()),
+      bio: formData.bio,
+      hourlyRate: Number(formData.hourlyRate) || 0,
+      rating: 0,
+      jobsCompleted: 0
+    };
+
+    onRegisterComplete(newUser);
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="bg-white p-8 rounded-2xl w-full max-w-lg shadow-xl border border-slate-200">
+        <button onClick={onBack} className="flex items-center text-slate-400 hover:text-slate-600 mb-6 text-sm">
+          <ChevronLeft size={16} /> Back to Login
+        </button>
+        
+        <h1 className="text-2xl font-bold text-slate-900 mb-2">Create Account</h1>
+        <p className="text-slate-500 mb-6">Step {step} of {role === UserRole.FREELANCER ? '3' : '1'}</p>
+
+        {/* Step 1: Basic Info */}
+        {step === 1 && (
+          <div className="space-y-4">
+            <h3 className="font-bold text-lg text-slate-700 text-center mb-2">Select Your Role</h3>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div 
+                onClick={() => setRole(UserRole.FREELANCER)}
+                className={`p-4 border rounded-xl cursor-pointer text-center transition-all ${role === UserRole.FREELANCER ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500' : 'border-slate-200 hover:border-emerald-300'}`}
+              >
+                <UserCircle className={`mx-auto mb-2 ${role === UserRole.FREELANCER ? 'text-emerald-600' : 'text-slate-400'}`} size={32} />
+                <h3 className={`font-bold ${role === UserRole.FREELANCER ? 'text-emerald-900' : 'text-slate-700'}`}>I want to Work</h3>
+                <p className="text-xs text-slate-500">Register as Freelancer</p>
+              </div>
+              <div 
+                onClick={() => setRole(UserRole.CLIENT)}
+                className={`p-4 border rounded-xl cursor-pointer text-center transition-all ${role === UserRole.CLIENT ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500' : 'border-slate-200 hover:border-emerald-300'}`}
+              >
+                <Briefcase className={`mx-auto mb-2 ${role === UserRole.CLIENT ? 'text-emerald-600' : 'text-slate-400'}`} size={32} />
+                <h3 className={`font-bold ${role === UserRole.CLIENT ? 'text-emerald-900' : 'text-slate-700'}`}>I want to Hire</h3>
+                <p className="text-xs text-slate-500">Register as Client</p>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+              <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg" placeholder="Ali Khan" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+              <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg" placeholder="ali@example.com" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+              <input type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg" placeholder="Create a password" />
+            </div>
+
+            <Button onClick={() => role === UserRole.FREELANCER ? setStep(2) : handleRegister()} className="w-full mt-4">
+              {role === UserRole.FREELANCER ? 'Next: Profile Details' : 'Create Account'}
+            </Button>
+          </div>
+        )}
+
+        {/* Step 2: Profile Details (Freelancer Only) */}
+        {step === 2 && role === UserRole.FREELANCER && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Professional Title</label>
+              <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg" placeholder="e.g. Graphic Designer" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Hourly Rate (PKR)</label>
+              <input type="number" value={formData.hourlyRate} onChange={e => setFormData({...formData, hourlyRate: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg" placeholder="e.g. 2500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Skills (Comma separated)</label>
+              <input type="text" value={formData.skills} onChange={e => setFormData({...formData, skills: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg" placeholder="Photoshop, Illustrator, Logo Design" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Bio / Overview</label>
+              <textarea rows={4} value={formData.bio} onChange={e => setFormData({...formData, bio: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg" placeholder="Tell clients about yourself..." />
+            </div>
+
+            <div className="flex gap-4 mt-6">
+              <Button variant="ghost" onClick={() => setStep(1)} className="flex-1">Back</Button>
+              <Button onClick={() => setStep(3)} className="flex-1">Next: Verification</Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: NADRA Verification (Freelancer Only) */}
+        {step === 3 && role === UserRole.FREELANCER && (
+          <div className="space-y-4">
+            <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-lg flex items-start gap-3">
+              <ShieldCheck className="text-emerald-600 shrink-0" size={24} />
+              <div>
+                <h4 className="font-bold text-emerald-800">NADRA Verification Required</h4>
+                <p className="text-xs text-emerald-700 mt-1">To ensure platform safety and secure payments, we require a valid CNIC. Your data is encrypted and used for identity verification only.</p>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">CNIC Number</label>
+              <div className="relative">
+                <FileBadge className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input 
+                  type="text" 
+                  value={formData.cnic} 
+                  onChange={e => setFormData({...formData, cnic: e.target.value})}
+                  className="w-full pl-10 pr-4 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                  placeholder="35202-1234567-8" 
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Front Side Photo</label>
+                <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:bg-slate-50 cursor-pointer relative transition-colors h-32 flex flex-col items-center justify-center">
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                    onChange={(e) => setFormData({...formData, cnicFront: e.target.files ? e.target.files[0] : null})}
+                  />
+                  <Camera className={`mb-2 ${formData.cnicFront ? 'text-emerald-500' : 'text-slate-400'}`} size={24} />
+                  <span className={`text-xs ${formData.cnicFront ? 'text-emerald-600 font-bold' : 'text-slate-500'}`}>
+                    {formData.cnicFront ? 'File Selected' : 'Upload Front'}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Back Side Photo</label>
+                <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:bg-slate-50 cursor-pointer relative transition-colors h-32 flex flex-col items-center justify-center">
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                    onChange={(e) => setFormData({...formData, cnicBack: e.target.files ? e.target.files[0] : null})}
+                  />
+                  <Camera className={`mb-2 ${formData.cnicBack ? 'text-emerald-500' : 'text-slate-400'}`} size={24} />
+                  <span className={`text-xs ${formData.cnicBack ? 'text-emerald-600 font-bold' : 'text-slate-500'}`}>
+                    {formData.cnicBack ? 'File Selected' : 'Upload Back'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-4 mt-6">
+              <Button variant="ghost" onClick={() => setStep(2)} className="flex-1">Back</Button>
+              <Button onClick={handleRegister} className="flex-1">Submit Verification</Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// --- Helper Components ---
 
 const WalletModal = ({ 
   isOpen, 
@@ -371,6 +624,14 @@ const HomePage = ({ setPage, categories, activeAds, jobs }: { setPage: (p: strin
           {jobs.slice(0,3).map(job => (
             <JobCard key={job.id} job={job} onClick={() => setPage('jobs')} />
           ))}
+          {jobs.length === 0 && (
+             <div className="col-span-full text-center py-12 text-slate-500">
+               <div className="inline-block p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                 <Briefcase className="w-12 h-12 text-slate-300 mx-auto mb-2"/>
+                 <p>No active jobs. Be the first to post!</p>
+               </div>
+             </div>
+          )}
         </div>
       </div>
     </section>
@@ -412,6 +673,12 @@ const JobsPage = ({ onSelectJob, categories, jobs }: { onSelectJob: (job: Job) =
         {jobs.map(job => (
           <JobCard key={job.id} job={job} onClick={() => onSelectJob(job)} />
         ))}
+        {jobs.length === 0 && (
+          <div className="text-center py-12 text-slate-500 bg-white rounded-xl border border-slate-200">
+            <h3 className="text-lg font-medium text-slate-900">No jobs found</h3>
+            <p className="text-sm text-slate-500">There are no active job listings at the moment.</p>
+          </div>
+        )}
       </div>
     </div>
   </div>
@@ -432,10 +699,12 @@ const JobDetailsPage = ({
   proposals: Proposal[];
   onHire: (proposal: Proposal) => void;
 }) => {
-  const [showProposalForm, setShowProposalForm] = useState(false);
   const [bidAmount, setBidAmount] = useState(job.budget.toString());
   const [coverLetter, setCoverLetter] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const hasApplied = user && proposals.some(p => p.freelancerId === user.id);
+  const jobProposals = proposals; // Already filtered in App
 
   const handleSubmitProposal = () => {
     if (!coverLetter) { alert("Please write a cover letter"); return; }
@@ -480,7 +749,45 @@ const JobDetailsPage = ({
             </div>
           </div>
 
-          {showProposalForm && user?.role === UserRole.FREELANCER && (
+          {/* Client View: Show Proposals */}
+          {user && user.id === job.postedBy.id && job.status === 'Open' && (
+            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+              <h2 className="text-xl font-bold mb-4">Received Proposals ({jobProposals.length})</h2>
+              {jobProposals.length === 0 ? (
+                <p className="text-slate-500 italic">No proposals yet.</p>
+              ) : (
+                <div className="space-y-4">
+                  {jobProposals.map(p => (
+                    <div key={p.id} className="border p-4 rounded-lg hover:border-emerald-300 transition-colors">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-bold text-slate-900">{p.freelancerName}</h4>
+                          <p className="text-sm text-slate-500">{new Date(p.submittedAt).toLocaleDateString()}</p>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-bold text-emerald-600 block">PKR {p.bidAmount.toLocaleString()}</span>
+                          <Button 
+                            className="mt-2 text-xs py-1 px-3" 
+                            onClick={() => {
+                              if(confirm("Are you sure you want to hire this freelancer? Funds will be moved to Escrow.")) {
+                                onHire(p);
+                              }
+                            }}
+                          >
+                            Hire Now
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded">{p.coverLetter}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Freelancer View: Application Form */}
+          {user && user.role === UserRole.FREELANCER && job.status === 'Open' && !hasApplied && (
              <div className="bg-white p-8 rounded-xl border border-emerald-200 shadow-lg ring-1 ring-emerald-100">
                <h3 className="text-xl font-bold mb-6">Submit Your Proposal</h3>
                <div className="space-y-4">
@@ -507,9 +814,24 @@ const JobDetailsPage = ({
                  </div>
                  <div className="flex gap-4 pt-2">
                    <Button onClick={handleSubmitProposal} isLoading={isSubmitting}>Submit Proposal</Button>
-                   <Button variant="ghost" onClick={() => setShowProposalForm(false)}>Cancel</Button>
                  </div>
                </div>
+             </div>
+          )}
+          
+          {hasApplied && (
+            <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-blue-700 text-center font-medium">
+              You have already submitted a proposal for this job.
+            </div>
+          )}
+
+          {!user && (
+             <div className="bg-slate-50 p-8 rounded-xl border border-slate-200 text-center">
+               <Lock className="mx-auto text-slate-400 mb-2" size={32}/>
+               <h3 className="font-bold text-slate-900 mb-1">Login to Apply</h3>
+               <p className="text-slate-500 text-sm mb-4">You must be logged in as a freelancer to submit a proposal.</p>
+               {/* This button should ideally trigger the auth flow in App */}
+               <div className="text-sm text-emerald-600 font-medium">Please Log In or Sign Up from the menu.</div>
              </div>
           )}
         </div>
@@ -521,19 +843,11 @@ const JobDetailsPage = ({
               <p className="text-2xl font-bold text-slate-900">PKR {job.budget.toLocaleString()}</p>
             </div>
             
-            {user?.role === UserRole.FREELANCER ? (
-              !showProposalForm ? (
-                <Button onClick={() => setShowProposalForm(true)} className="w-full mb-4">Apply Now</Button>
-              ) : (
-                <div className="text-center text-sm text-emerald-600 font-medium bg-emerald-50 p-3 rounded-lg mb-4">
-                  Drafting Proposal...
-                </div>
-              )
-            ) : (
-              <Button variant="secondary" className="w-full mb-4" onClick={() => alert("Edit functionality coming soon!")}>Edit Job Post</Button>
-            )}
-            
             <div className="space-y-2 text-sm">
+              <div className="flex justify-between text-slate-600">
+                <span>Client</span>
+                <span className="font-medium">{job.postedBy.name}</span>
+              </div>
               <div className="flex justify-between text-slate-600">
                 <span>Proposals</span>
                 <span className="font-medium">{job.applicants}</span>
@@ -645,114 +959,6 @@ const WorkroomPage = ({ onBack, user, onReleaseFunds, job }: { onBack: () => voi
     </div>
   );
 };
-
-const FreelancersPage = ({ freelancers, onViewProfile }: { freelancers: FreelancerProfile[], onViewProfile: (p: FreelancerProfile) => void }) => (
-  <div className="px-4 lg:px-20 py-8">
-     <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-      <h1 className="text-2xl font-bold">Hire Top Talent</h1>
-      <div className="relative w-full md:w-96">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-        <input 
-          type="text" 
-          placeholder="Search freelancers by skill..." 
-          className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-        />
-      </div>
-    </div>
-
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {freelancers.filter(f => f.user.status === 'Active').map(profile => (
-        <FreelancerCard 
-          key={profile.id} 
-          profile={profile} 
-          onViewProfile={() => onViewProfile(profile)}
-        />
-      ))}
-    </div>
-  </div>
-);
-
-const PublicProfilePage = ({ profile, onBack }: { profile: FreelancerProfile, onBack: () => void }) => {
-  return (
-    <div className="max-w-4xl mx-auto px-6 py-12">
-       <button onClick={onBack} className="flex items-center text-slate-500 hover:text-emerald-600 mb-6">
-        <ChevronLeft size={18} className="mr-1" /> Back to Freelancers
-      </button>
-       <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row gap-6 items-start border-b border-slate-100 pb-8 mb-8">
-             <img src={profile.user.avatar} className="w-32 h-32 rounded-full border-4 border-slate-50 shadow-sm" alt="Profile" />
-             <div className="flex-1">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h1 className="text-2xl font-bold text-slate-900">{profile.user.name}</h1>
-                    <p className="text-emerald-600 font-medium text-lg">{profile.title}</p>
-                  </div>
-                  {profile.user.verified && <VerificationBadge />}
-                </div>
-                
-                <div className="flex gap-4 mt-4 text-sm text-slate-500">
-                   <div className="flex items-center gap-1">
-                      <Star size={16} className="text-yellow-500" fill="currentColor"/>
-                      <span className="font-bold text-slate-900">{profile.rating}</span>
-                   </div>
-                   <div className="flex items-center gap-1">
-                      <Briefcase size={16} />
-                      <span>{profile.jobsCompleted} Jobs Completed</span>
-                   </div>
-                   <div className="flex items-center gap-1">
-                      <Clock size={16} />
-                      <span>PKR {profile.hourlyRate}/hr</span>
-                   </div>
-                </div>
-             </div>
-             <div>
-                <Button className="w-full md:w-auto">Hire Now</Button>
-             </div>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-             <div className="md:col-span-2 space-y-6">
-                <section>
-                   <h3 className="font-bold text-lg mb-3">About</h3>
-                   <p className="text-slate-600 leading-relaxed">{profile.bio}</p>
-                </section>
-                <section>
-                   <h3 className="font-bold text-lg mb-3">Skills</h3>
-                   <div className="flex flex-wrap gap-2">
-                      {profile.skills.map(skill => (
-                        <span key={skill} className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm font-medium">
-                           {skill}
-                        </span>
-                      ))}
-                   </div>
-                </section>
-             </div>
-             <div className="space-y-6">
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                   <h4 className="font-bold mb-2 text-sm text-slate-500 uppercase">Total Earned</h4>
-                   <p className="text-xl font-bold text-emerald-600">PKR {profile.totalEarned.toLocaleString()}</p>
-                </div>
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                   <h4 className="font-bold mb-2 text-sm text-slate-500 uppercase">Verification</h4>
-                   <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm text-slate-700">
-                         <CheckCircle2 size={16} className="text-emerald-500"/> Email Verified
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-slate-700">
-                         <CheckCircle2 size={16} className="text-emerald-500"/> NADRA ID Verified
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-slate-700">
-                         <CheckCircle2 size={16} className="text-emerald-500"/> Payment Verified
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </div>
-       </div>
-    </div>
-  )
-}
 
 const PostJobPage = ({ onPost, categories, user }: { onPost: (job: Job) => void, categories: string[], user: User }) => {
   const [title, setTitle] = useState('');
@@ -1348,6 +1554,9 @@ const AdminPage = ({
                       </td>
                     </tr>
                   ))}
+                  {freelancers.length === 0 && (
+                    <tr><td colSpan={5} className="p-4 text-center text-slate-500 italic">No freelancers registered yet.</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1586,7 +1795,6 @@ const App = () => {
 
   const [activeWorkroomJob, setActiveWorkroomJob] = useState<Job | undefined>(undefined);
   const [activeAds, setActiveAds] = useState<Advertisement[]>([]);
-  const [selectedFreelancer, setSelectedFreelancer] = useState<FreelancerProfile | null>(null);
   
   // UI State
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
@@ -1863,20 +2071,19 @@ const App = () => {
         />
       ) : null;
       case 'freelancers': return (
-        <FreelancersPage 
-          freelancers={freelancers} 
-          onViewProfile={(profile) => {
-            setSelectedFreelancer(profile);
-            setCurrentPage('public-profile');
-          }}
-        />
+        <div className="px-4 lg:px-20 py-8">
+          <h1 className="text-2xl font-bold mb-8">Hire Top Talent</h1>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {freelancers.map(p => <FreelancerCard key={p.id} profile={p} />)}
+            {freelancers.length === 0 && (
+               <div className="col-span-full text-center py-12 text-slate-500 border border-dashed border-slate-300 rounded-xl">
+                 <Users className="mx-auto mb-2 text-slate-300" size={48}/>
+                 <p className="font-medium">No freelancers registered yet.</p>
+               </div>
+            )}
+          </div>
+        </div>
       );
-      case 'public-profile': return selectedFreelancer ? (
-        <PublicProfilePage 
-          profile={selectedFreelancer} 
-          onBack={() => setCurrentPage('freelancers')} 
-        />
-      ) : null;
       case 'dashboard': return ProtectedRoute(
         <DashboardPage 
           user={user!} // ProtectedRoute ensures user is not null
