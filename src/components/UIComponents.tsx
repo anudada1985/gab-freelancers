@@ -92,7 +92,7 @@ export const JobCard: React.FC<{ job: Job; onClick: () => void }> = ({ job, onCl
   </div>
 );
 
-export const FreelancerCard: React.FC<{ profile: FreelancerProfile }> = ({ profile }) => (
+export const FreelancerCard: React.FC<{ profile: FreelancerProfile; onViewProfile?: () => void }> = ({ profile, onViewProfile }) => (
   <div className="bg-white p-6 rounded-xl border border-slate-200 hover:shadow-md transition-shadow">
     <div className="flex items-center gap-4 mb-4">
       <img src={profile.user.avatar} alt={profile.user.name} className="w-16 h-16 rounded-full object-cover border-2 border-slate-100" />
@@ -125,7 +125,13 @@ export const FreelancerCard: React.FC<{ profile: FreelancerProfile }> = ({ profi
 
     <div className="flex justify-between items-center pt-4 border-t border-slate-100">
       <span className="font-bold text-slate-900">PKR {profile.hourlyRate}/hr</span>
-      <button className="text-sm font-medium text-emerald-600 hover:text-emerald-700 hover:underline">
+      <button 
+        onClick={(e) => {
+          e.stopPropagation();
+          onViewProfile?.();
+        }}
+        className="text-sm font-medium text-emerald-600 hover:text-emerald-700 hover:underline"
+      >
         View Profile
       </button>
     </div>
