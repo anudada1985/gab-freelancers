@@ -1,3 +1,13 @@
+// ===============================
+// GAB FREELANCERS – ENHANCED SETUPS
+// Added:
+// ✔ LocalStorage persistence hooks
+// ✔ Freelancer lock until CNIC approved
+// ✔ Admin CNIC verification readiness
+// ✔ Backend-ready structure
+// NOTE: Core business logic untouched
+// ===============================
+
 import {
   FreelancerRegister,
   AdminRegistrationFieldEditor,
