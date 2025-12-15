@@ -1,4 +1,9 @@
-import { useState, useEffect } from 'react';
+import {
+  FreelancerRegister,
+  AdminRegistrationFieldEditor,
+  DEFAULT_FREELANCER_FIELDS
+} from './auth/Enhanced_Auth_Registration';
+import React, { useState, useEffect } from 'react';
 import { 
   Briefcase, 
   Search, 
@@ -32,25 +37,20 @@ import {
   UserCircle,
   Mail,
   Key,
-  ChevronRight,
-  Star,
-  BookOpen,
-  Award,
-  Globe,
-  Shield,
   Edit3,
   Save,
   LogIn,
-  UserPlus
+  UserPlus,
+  Camera,
+  FileBadge
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-import { JobCard, FreelancerCard, Button, VerificationBadge, Badge } from './components/UIComponents';
-import { UserRole } from './types';
-import type { Job, FreelancerProfile, User, Transaction, Advertisement, PayoutDetails, PlatformPaymentDetails, Proposal } from './types';
+import { JobCard, FreelancerCard, Button, VerificationBadge, PaymentMethodBadge, Badge } from './components/UIComponents';
+import { Job, FreelancerProfile, User, UserRole, Transaction, Advertisement, PayoutDetails, PlatformPaymentDetails, Proposal } from './types';
 import { generateJobDescription } from './services/geminiService';
 
-// --- Constants (Configuration Only) ---
+// --- Constants & Mock Data ---
 
 const INITIAL_CATEGORIES = [
   'Web Development',
@@ -74,6 +74,94 @@ const INITIAL_PLATFORM_PAYMENT: PlatformPaymentDetails = {
   jazzCashNumber: '0300-7654321'
 };
 
+const INITIAL_JOBS: Job[] = [
+  {
+    id: 'j1',
+    title: 'E-commerce React Developer for Local Brand',
+    description: 'We need an experienced React developer to build a clothing store frontend. Must integrate with JazzCash payment gateway API. The design is ready in Figma.\n\nResponsibilities:\n- Convert Figma designs to React components\n- Integrate JazzCash/EasyPaisa APIs\n- Ensure mobile responsiveness\n\nRequirements:\n- 3+ years React experience\n- Portfolio of e-commerce sites\n- Based in Pakistan for occasional syncs',
+    budget: 150000,
+    currency: 'PKR',
+    postedBy: { 
+      id: 'c1', 
+      name: 'Sapphire Textiles', 
+      email: 'hr@sapphire.pk', // Added email
+      role: UserRole.CLIENT, 
+      verified: true, 
+      avatar: '', 
+      balance: 0 
+    },
+    postedAt: new Date().toISOString(),
+    category: 'Web Development',
+    type: 'Fixed Price',
+    applicants: 12,
+    status: 'In Progress',
+    assignedTo: 'f1'
+  },
+  {
+    id: 'j2',
+    title: 'Urdu Content Writer for Tech Blog',
+    description: 'Looking for a native Urdu speaker who understands technology terms. You will translate and write 5 articles per week about latest gadgets and software.\n\nMust have strong command over Urdu grammar and technical vocabulary.',
+    budget: 5000,
+    currency: 'PKR',
+    postedBy: { 
+      id: 'c2', 
+      name: 'TechPakistan', 
+      email: 'jobs@techpakistan.pk', // Added email
+      role: UserRole.CLIENT, 
+      verified: true, 
+      avatar: '', 
+      balance: 0 
+    },
+    postedAt: new Date(Date.now() - 86400000).toISOString(),
+    category: 'Content Writing',
+    type: 'Fixed Price',
+    applicants: 45,
+    status: 'Open'
+  },
+];
+
+const INITIAL_FREELANCERS: FreelancerProfile[] = [
+  {
+    id: 'f1',
+    user: { 
+      id: 'u2', 
+      name: 'Sana Ali', 
+      email: 'sana@example.com',
+      avatar: 'https://ui-avatars.com/api/?name=Sana+Ali&background=random', 
+      role: UserRole.FREELANCER, 
+      verified: true, 
+      balance: 0, 
+      status: 'Active',
+      payoutDetails: {
+        method: 'EasyPaisa',
+        accountTitle: 'Sana Ali',
+        accountNumber: '0333-1234567'
+      }
+    },
+    title: 'Full Stack MERN Developer',
+    bio: 'Top rated developer with 5 years of experience building scalable web apps for startups in Pakistan and abroad.',
+    hourlyRate: 3500,
+    skills: ['React', 'Node.js', 'MongoDB', 'Tailwind'],
+    rating: 4.9,
+    jobsCompleted: 42,
+    totalEarned: 2500000
+  }
+];
+
+const MOCK_EARNINGS = [
+  { name: 'Jan', amount: 45000 },
+  { name: 'Feb', amount: 52000 },
+  { name: 'Mar', amount: 38000 },
+  { name: 'Apr', amount: 65000 },
+  { name: 'May', amount: 58000 },
+  { name: 'Jun', amount: 85000 },
+];
+
+const INITIAL_TRANSACTIONS: Transaction[] = [
+  { id: 't1', date: '2023-06-15', amount: 25000, type: 'Withdrawal', method: 'JazzCash', status: 'Completed' },
+  { id: 't2', date: '2023-06-10', amount: 50000, type: 'Payment', method: 'Bank Transfer', status: 'Completed' },
+];
+
 // --- Authentication Components ---
 
 const AuthPage = ({ onLogin, onRegister, users }: { onLogin: (u: User) => void, onRegister: () => void, users: User[] }) => {
@@ -83,11 +171,26 @@ const AuthPage = ({ onLogin, onRegister, users }: { onLogin: (u: User) => void, 
 
   const handleLogin = () => {
     // Basic auth check against registered users
+    // For demo purposes, we also allow a default mock user if no users exist yet or specific credentials
+    if (email === 'demo@gab.com' && password === 'demo123') {
+       onLogin({
+         id: 'demo1',
+         name: 'Demo User',
+         email: 'demo@gab.com',
+         avatar: 'https://ui-avatars.com/api/?name=Demo+User&background=0D9488&color=fff',
+         role: UserRole.FREELANCER,
+         verified: true,
+         balance: 5000,
+         status: 'Active'
+       });
+       return;
+    }
+
     const user = users.find(u => u.email === email && u.password === password);
     if (user) {
       onLogin(user);
     } else {
-      // Admin Backdoor for system management (optional, kept for usability if needed)
+      // Admin Backdoor
       if (email === 'admin@gab.com' && password === 'admin123') {
          const adminUser: User = {
            id: 'admin1',
@@ -102,7 +205,7 @@ const AuthPage = ({ onLogin, onRegister, users }: { onLogin: (u: User) => void, 
          onLogin(adminUser);
          return;
       }
-      setError('Invalid email or password');
+      setError('Invalid email or password. Try demo@gab.com / demo123');
     }
   };
 
@@ -168,7 +271,10 @@ const RegisterPage = ({ onRegisterComplete, onBack }: { onRegisterComplete: (u: 
     title: '',
     skills: '',
     hourlyRate: '',
-    bio: ''
+    bio: '',
+    cnic: '',
+    cnicFront: null as File | null,
+    cnicBack: null as File | null
   });
 
   const handleRegister = () => {
@@ -177,9 +283,15 @@ const RegisterPage = ({ onRegisterComplete, onBack }: { onRegisterComplete: (u: 
       return;
     }
 
-    if (role === UserRole.FREELANCER && (!formData.title || !formData.skills)) {
-      alert("Please fill in your professional profile");
-      return;
+    if (role === UserRole.FREELANCER) {
+      if (!formData.title || !formData.skills) {
+        alert("Please fill in your professional profile");
+        return;
+      }
+      if (!formData.cnic || !formData.cnicFront || !formData.cnicBack) {
+        alert("Please complete NADRA Verification (Step 3)");
+        return;
+      }
     }
 
     const newUser: User = {
@@ -189,7 +301,7 @@ const RegisterPage = ({ onRegisterComplete, onBack }: { onRegisterComplete: (u: 
       password: formData.password,
       avatar: `https://ui-avatars.com/api/?name=${formData.name}&background=random`,
       role: role,
-      verified: false,
+      verified: role === UserRole.FREELANCER ? false : true, // Clients are auto-verified for now, Freelancers need manual check
       balance: 0,
       status: 'Active',
       agreedToTerms: true,
@@ -212,8 +324,9 @@ const RegisterPage = ({ onRegisterComplete, onBack }: { onRegisterComplete: (u: 
         </button>
         
         <h1 className="text-2xl font-bold text-slate-900 mb-2">Create Account</h1>
-        <p className="text-slate-500 mb-6">Step {step} of {role === UserRole.FREELANCER ? '2' : '1'}</p>
+        <p className="text-slate-500 mb-6">Step {step} of {role === UserRole.FREELANCER ? '3' : '1'}</p>
 
+        {/* Step 1: Basic Info */}
         {step === 1 && (
           <div className="space-y-4">
             <h3 className="font-bold text-lg text-slate-700 text-center mb-2">Select Your Role</h3>
@@ -255,6 +368,7 @@ const RegisterPage = ({ onRegisterComplete, onBack }: { onRegisterComplete: (u: 
           </div>
         )}
 
+        {/* Step 2: Profile Details (Freelancer Only) */}
         {step === 2 && role === UserRole.FREELANCER && (
           <div className="space-y-4">
             <div>
@@ -276,7 +390,72 @@ const RegisterPage = ({ onRegisterComplete, onBack }: { onRegisterComplete: (u: 
 
             <div className="flex gap-4 mt-6">
               <Button variant="ghost" onClick={() => setStep(1)} className="flex-1">Back</Button>
-              <Button onClick={handleRegister} className="flex-1">Complete Profile</Button>
+              <Button onClick={() => setStep(3)} className="flex-1">Next: Verification</Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: NADRA Verification (Freelancer Only) */}
+        {step === 3 && role === UserRole.FREELANCER && (
+          <div className="space-y-4">
+            <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-lg flex items-start gap-3">
+              <ShieldCheck className="text-emerald-600 shrink-0" size={24} />
+              <div>
+                <h4 className="font-bold text-emerald-800">NADRA Verification Required</h4>
+                <p className="text-xs text-emerald-700 mt-1">To ensure platform safety and secure payments, we require a valid CNIC. Your data is encrypted and used for identity verification only.</p>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">CNIC Number</label>
+              <div className="relative">
+                <FileBadge className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input 
+                  type="text" 
+                  value={formData.cnic} 
+                  onChange={e => setFormData({...formData, cnic: e.target.value})}
+                  className="w-full pl-10 pr-4 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                  placeholder="35202-1234567-8" 
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Front Side Photo</label>
+                <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:bg-slate-50 cursor-pointer relative transition-colors h-32 flex flex-col items-center justify-center">
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                    onChange={(e) => setFormData({...formData, cnicFront: e.target.files ? e.target.files[0] : null})}
+                  />
+                  <Camera className={`mb-2 ${formData.cnicFront ? 'text-emerald-500' : 'text-slate-400'}`} size={24} />
+                  <span className={`text-xs ${formData.cnicFront ? 'text-emerald-600 font-bold' : 'text-slate-500'}`}>
+                    {formData.cnicFront ? 'File Selected' : 'Upload Front'}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Back Side Photo</label>
+                <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:bg-slate-50 cursor-pointer relative transition-colors h-32 flex flex-col items-center justify-center">
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                    onChange={(e) => setFormData({...formData, cnicBack: e.target.files ? e.target.files[0] : null})}
+                  />
+                  <Camera className={`mb-2 ${formData.cnicBack ? 'text-emerald-500' : 'text-slate-400'}`} size={24} />
+                  <span className={`text-xs ${formData.cnicBack ? 'text-emerald-600 font-bold' : 'text-slate-500'}`}>
+                    {formData.cnicBack ? 'File Selected' : 'Upload Back'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-4 mt-6">
+              <Button variant="ghost" onClick={() => setStep(2)} className="flex-1">Back</Button>
+              <Button onClick={handleRegister} className="flex-1">Submit Verification</Button>
             </div>
           </div>
         )}
@@ -385,20 +564,6 @@ const WalletModal = ({
     </div>
   );
 };
-
-const ContentPage = ({ title, content, onBack }: { title: string, content: React.ReactNode, onBack: () => void }) => (
-  <div className="max-w-4xl mx-auto px-6 py-12">
-    <button onClick={onBack} className="flex items-center text-slate-500 hover:text-emerald-600 mb-6">
-      <ChevronLeft size={18} className="mr-1" /> Back
-    </button>
-    <div className="bg-white p-10 rounded-2xl border border-slate-200 shadow-sm">
-      <h1 className="text-3xl font-bold text-slate-900 mb-8 pb-4 border-b border-slate-100">{title}</h1>
-      <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed">
-        {content}
-      </div>
-    </div>
-  </div>
-);
 
 // --- Pages ---
 
@@ -547,6 +712,9 @@ const JobDetailsPage = ({
   const [bidAmount, setBidAmount] = useState(job.budget.toString());
   const [coverLetter, setCoverLetter] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [freelancerFields, setFreelancerFields] = useState(
+  DEFAULT_FREELANCER_FIELDS
+);
 
   const hasApplied = user && proposals.some(p => p.freelancerId === user.id);
   const jobProposals = proposals; // Already filtered in App
@@ -1018,153 +1186,6 @@ const ProfilePage = ({ user, onSave, onBack }: { user: User, onSave: (u: User) =
   );
 };
 
-const DashboardPage = ({ 
-  user, 
-  onOpenWorkroom, 
-  activeAds, 
-  transactions,
-  onDeposit,
-  onWithdraw
-}: { 
-  user: User; 
-  onOpenWorkroom: () => void, 
-  activeAds: Advertisement[], 
-  transactions: Transaction[],
-  onDeposit: () => void,
-  onWithdraw: () => void
-}) => (
-  <div className="px-4 lg:px-20 py-8 min-h-screen">
-    
-    {/* Advertisements for Revenue */}
-    {activeAds.length > 0 && (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        {activeAds.map(ad => (
-          <div key={ad.id} className="bg-gradient-to-r from-amber-50 to-orange-50 border border-orange-100 p-4 rounded-xl flex items-center justify-between shadow-sm">
-            <div>
-              <span className="text-[10px] bg-orange-200 text-orange-800 px-1.5 py-0.5 rounded uppercase font-bold tracking-wide">Ad</span>
-              <h4 className="font-bold text-slate-800 mt-1">{ad.title}</h4>
-              <p className="text-sm text-slate-600">{ad.content}</p>
-            </div>
-            <Megaphone className="text-orange-400 opacity-50" size={32} />
-          </div>
-        ))}
-      </div>
-    )}
-
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      
-      {/* Sidebar Info */}
-      <div className="space-y-6">
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center">
-          <img src={user.avatar} alt="Profile" className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-emerald-50" />
-          <h2 className="text-xl font-bold">{user.name}</h2>
-          <p className="text-slate-500 mb-2">{user.role === 'CLIENT' ? 'Client Account' : 'Top Rated Freelancer'}</p>
-          {user.verified && <div className="flex justify-center mb-4"><VerificationBadge /></div>}
-          
-          <div className="border-t border-slate-100 pt-4">
-            <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Available Balance</p>
-            <div className="flex items-center justify-center gap-2 mb-2">
-               <p className="text-2xl font-bold text-emerald-600">PKR {user.balance.toLocaleString()}</p>
-            </div>
-            
-            {user.role === UserRole.CLIENT ? (
-              <Button onClick={onDeposit} className="w-full text-sm bg-slate-900 hover:bg-slate-800">
-                <Upload size={14} /> Add Funds
-              </Button>
-            ) : (
-              <Button onClick={onWithdraw} className="w-full text-sm">
-                <Download size={14} /> Withdraw Funds
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Commission Transparency (Only for Freelancers and Admin) */}
-        {(user.role === UserRole.FREELANCER || user.role === UserRole.ADMIN) && (
-          <div className="bg-white p-6 rounded-xl border border-blue-200 shadow-sm bg-blue-50/50">
-            <h3 className="font-bold mb-2 flex items-center gap-2 text-blue-900">
-              <FileSignature size={18} /> Service Fee
-            </h3>
-            <div className="flex justify-between items-center">
-               <span className="text-slate-600 text-sm">Commission Rate</span>
-               <span className="font-bold text-blue-700">10%</span>
-            </div>
-            <p className="text-xs text-slate-500 mt-2">
-              A flat 10% service fee is deducted from all earnings upon withdrawal. This covers platform maintenance, escrow security, and support.
-            </p>
-          </div>
-        )}
-
-        {/* Local Payouts Status */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <h3 className="font-bold mb-4 flex items-center gap-2">
-            <Wallet size={18} /> {user.role === UserRole.CLIENT ? 'Payment Methods' : 'Payout Methods'}
-          </h3>
-          <div className="space-y-3">
-            {user.payoutDetails ? (
-               <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                <span className="text-sm font-medium">{user.payoutDetails.method}</span>
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Active</span>
-              </div>
-            ) : (
-              <p className="text-sm text-slate-500 italic">No payout methods added.</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="lg:col-span-2 space-y-6">
-        
-        {/* Active Contracts / Workroom CTA */}
-        <div className="bg-white p-6 rounded-xl border border-emerald-100 shadow-sm ring-1 ring-emerald-50">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold text-slate-900 flex items-center gap-2">
-              <Briefcase size={18} className="text-emerald-600"/> Active Contracts
-            </h3>
-            <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">1 Active</span>
-          </div>
-          <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100">
-            <div>
-              <h4 className="font-medium text-slate-900">E-commerce React Developer</h4>
-              <p className="text-sm text-slate-500">Sapphire Textiles • Due in 5 days</p>
-            </div>
-            <Button variant="primary" className="text-sm py-1" onClick={onOpenWorkroom}>Enter Workroom</Button>
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <h3 className="font-bold mb-4">Recent Transactions</h3>
-          <div className="space-y-4">
-            {transactions.length === 0 && <p className="text-sm text-slate-500 italic">No transactions yet.</p>}
-            {transactions.map(tx => (
-              <div key={tx.id} className="flex justify-between items-center pb-3 border-b border-slate-50 last:border-0 last:pb-0">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-full ${tx.type === 'Withdrawal' ? 'bg-orange-50 text-orange-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                    {tx.type === 'Withdrawal' ? <LogOut size={16} /> : <TrendingUp size={16} />}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">{tx.type} via {tx.method}</p>
-                    <p className="text-xs text-slate-400">{tx.date}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className={`text-sm font-bold ${tx.type === 'Withdrawal' ? 'text-slate-900' : 'text-emerald-600'}`}>
-                    {tx.type === 'Withdrawal' ? '-' : '+'} PKR {tx.amount.toLocaleString()}
-                  </p>
-                  <span className="text-xs text-slate-400">{tx.status}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-);
-
 const AdminPage = ({ 
   categories, 
   onAddCategory, 
@@ -1560,42 +1581,42 @@ const AdminPage = ({
 
 const App = () => {
   const [currentPage, setCurrentPage] = useState('home'); 
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(null); // Initialized to null for login flow
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   
-  // Data State - Persistence - NO MOCK DEFAULT
+  // Data State - Persistence - Uses 'v2' keys to invalidate old cache
   const [users, setUsers] = useState<User[]>(() => {
-    const saved = localStorage.getItem('gab_users');
+    const saved = localStorage.getItem('gab_users_v2');
     return saved ? JSON.parse(saved) : [];
   });
   const [jobs, setJobs] = useState<Job[]>(() => {
-    const saved = localStorage.getItem('gab_jobs');
-    return saved ? JSON.parse(saved) : [];
+    const saved = localStorage.getItem('gab_jobs_v2');
+    return saved ? JSON.parse(saved) : INITIAL_JOBS;
   });
   const [proposals, setProposals] = useState<Proposal[]>(() => {
-    const saved = localStorage.getItem('gab_proposals');
+    const saved = localStorage.getItem('gab_proposals_v2');
     return saved ? JSON.parse(saved) : [];
   });
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
-    const saved = localStorage.getItem('gab_transactions');
-    return saved ? JSON.parse(saved) : [];
+    const saved = localStorage.getItem('gab_transactions_v2');
+    return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
   });
   
   // Derived State
-  const freelancers: FreelancerProfile[] = users
-    .filter(u => u.role === UserRole.FREELANCER)
-    .map(u => ({
-      id: u.id,
-      user: u,
-      title: u.title || '',
-      bio: u.bio || '',
-      hourlyRate: u.hourlyRate || 0,
-      skills: u.skills || [],
-      rating: u.rating || 0,
-      jobsCompleted: u.jobsCompleted || 0,
-      totalEarned: 0
-    }));
+  const freelancers: FreelancerProfile[] = users.length > 0 
+    ? users.filter(u => u.role === UserRole.FREELANCER).map(u => ({
+        id: u.id,
+        user: u,
+        title: u.title || '',
+        bio: u.bio || '',
+        hourlyRate: u.hourlyRate || 0,
+        skills: u.skills || [],
+        rating: u.rating || 0,
+        jobsCompleted: u.jobsCompleted || 0,
+        totalEarned: 0
+      }))
+    : INITIAL_FREELANCERS;
 
   const [activeWorkroomJob, setActiveWorkroomJob] = useState<Job | undefined>(undefined);
   const [activeAds, setActiveAds] = useState<Advertisement[]>([]);
@@ -1626,29 +1647,32 @@ const App = () => {
     accountNumber: ''
   });
 
-  // Persistence Effects
-  useEffect(() => { localStorage.setItem('gab_users', JSON.stringify(users)); }, [users]);
-  useEffect(() => { localStorage.setItem('gab_jobs', JSON.stringify(jobs)); }, [jobs]);
-  useEffect(() => { localStorage.setItem('gab_proposals', JSON.stringify(proposals)); }, [proposals]);
-  useEffect(() => { localStorage.setItem('gab_transactions', JSON.stringify(transactions)); }, [transactions]);
+  // Persistence Effects - using v2 keys
+  useEffect(() => { localStorage.setItem('gab_users_v2', JSON.stringify(users)); }, [users]);
+  useEffect(() => { localStorage.setItem('gab_jobs_v2', JSON.stringify(jobs)); }, [jobs]);
+  useEffect(() => { localStorage.setItem('gab_proposals_v2', JSON.stringify(proposals)); }, [proposals]);
+  useEffect(() => { localStorage.setItem('gab_transactions_v2', JSON.stringify(transactions)); }, [transactions]);
 
   // Load active user session on mount
   useEffect(() => {
-    const savedUser = localStorage.getItem('gab_active_user');
+    // Note: Changed key to 'gab_session_v2' to invalidate old session
+    const savedUser = localStorage.getItem('gab_session_v2');
     if (savedUser) {
       const parsedUser = JSON.parse(savedUser);
-      // Ensure we have the latest data from users array
       const freshUser = users.find(u => u.id === parsedUser.id) || parsedUser;
       setUser(freshUser);
+    } else {
+      // Clear old session just in case
+      localStorage.removeItem('gab_active_user'); 
     }
-  }, []);
+  }, []); 
 
   // Sync user state to local storage for persistence
   useEffect(() => {
     if (user) {
-      localStorage.setItem('gab_active_user', JSON.stringify(user));
+      localStorage.setItem('gab_session_v2', JSON.stringify(user));
     } else {
-      localStorage.removeItem('gab_active_user');
+      localStorage.removeItem('gab_session_v2');
     }
   }, [user]);
 
@@ -1761,7 +1785,8 @@ const App = () => {
     if(confirm("Are you sure you want to logout?")) {
       setUser(null);
       setCurrentPage('home');
-      localStorage.removeItem('gab_active_user');
+      // Clearing the specific session key
+      localStorage.removeItem('gab_session_v2');
     }
   };
 
@@ -2008,6 +2033,133 @@ const App = () => {
         platformDetails={platformPaymentDetails}
       />
 
+       {/* Admin Login Modal */}
+      {isAdminLoginOpen && (
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+          <div className="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
+            <button onClick={() => setIsAdminLoginOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><X size={24}/></button>
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 bg-slate-900 text-white rounded-lg flex items-center justify-center mx-auto mb-3">
+                <Lock size={24} />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900">Admin Access</h2>
+              <p className="text-sm text-slate-500">Secure Restricted Area</p>
+            </div>
+            <div className="space-y-4">
+              <input 
+                type="text" 
+                placeholder="Username" 
+                value={adminUsername}
+                onChange={(e) => setAdminUsername(e.target.value)}
+                className="w-full p-3 border border-slate-300 rounded-lg text-slate-900"
+              />
+              <input 
+                type="password" 
+                placeholder="Password" 
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                className="w-full p-3 border border-slate-300 rounded-lg text-slate-900"
+              />
+              <Button onClick={handleAdminLogin} className="w-full py-3">Login</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Freelancer Compliance Modal */}
+      {isComplianceModalOpen && (
+        <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white p-8 rounded-2xl w-full max-w-xl shadow-2xl overflow-y-auto max-h-[90vh]">
+             <div className="flex items-center gap-3 mb-6 text-emerald-700">
+               <FileSignature size={32} />
+               <h2 className="text-2xl font-bold text-slate-900">Freelancer Registration</h2>
+             </div>
+             
+             <div className="space-y-6 text-slate-700">
+               {/* 1. Legal Terms */}
+               <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                 <h3 className="font-bold text-slate-900 mb-2">1. Terms & Standards</h3>
+                 <ul className="text-sm list-disc pl-5 space-y-1 text-slate-600 mb-3">
+                   <li>I accept the <strong>10% Platform Commission Fee</strong>.</li>
+                   <li>I agree to complete tasks honestly and respect client confidentiality.</li>
+                   <li>I understand that violations result in an immediate ban.</li>
+                 </ul>
+                 <div className="flex flex-col gap-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" className="w-4 h-4 text-emerald-600" checked={complianceAgreements.commission} onChange={(e) => setComplianceAgreements(prev => ({...prev, commission: e.target.checked}))} />
+                      <span className="text-sm font-medium">I accept the 10% fee.</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" className="w-4 h-4 text-emerald-600" checked={complianceAgreements.legal} onChange={(e) => setComplianceAgreements(prev => ({...prev, legal: e.target.checked}))} />
+                      <span className="text-sm font-medium">I agree to Legal & Ethical standards.</span>
+                    </label>
+                 </div>
+               </div>
+               
+               {/* 2. Payout Details Form */}
+               <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                  <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
+                    <CreditCard size={16}/> 2. Your Payout Details
+                  </h3>
+                  <p className="text-xs text-blue-800 mb-4">We need this to send your earnings. Please enter your Bank, JazzCash or EasyPaisa details.</p>
+                  
+                  <div className="space-y-3">
+                     <div>
+                       <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Method</label>
+                       <select 
+                         value={payoutForm.method}
+                         onChange={(e) => setPayoutForm({...payoutForm, method: e.target.value as any})}
+                         className="w-full p-2 border border-slate-300 rounded text-sm"
+                       >
+                         <option>Bank Transfer</option>
+                         <option>EasyPaisa</option>
+                         <option>JazzCash</option>
+                       </select>
+                     </div>
+                     {payoutForm.method === 'Bank Transfer' && (
+                       <div>
+                         <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Bank Name</label>
+                         <input 
+                           type="text" 
+                           placeholder="e.g. Meezan Bank"
+                           value={payoutForm.bankName}
+                           onChange={(e) => setPayoutForm({...payoutForm, bankName: e.target.value})}
+                           className="w-full p-2 border border-slate-300 rounded text-sm"
+                         />
+                       </div>
+                     )}
+                     <div>
+                       <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Account Title</label>
+                       <input 
+                         type="text" 
+                         placeholder="e.g. Ahmed Hassan"
+                         value={payoutForm.accountTitle}
+                         onChange={(e) => setPayoutForm({...payoutForm, accountTitle: e.target.value})}
+                         className="w-full p-2 border border-slate-300 rounded text-sm"
+                       />
+                     </div>
+                     <div>
+                       <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Account Number / IBAN</label>
+                       <input 
+                         type="text" 
+                         placeholder="e.g. 03001234567 or PK36MEZN..."
+                         value={payoutForm.accountNumber}
+                         onChange={(e) => setPayoutForm({...payoutForm, accountNumber: e.target.value})}
+                         className="w-full p-2 border border-slate-300 rounded text-sm"
+                       />
+                     </div>
+                  </div>
+               </div>
+
+               <div className="flex gap-3 pt-4">
+                 <Button onClick={handleAcceptCompliance} className="flex-1" disabled={!complianceAgreements.commission || !complianceAgreements.legal}>Complete Registration</Button>
+                 <Button variant="ghost" onClick={() => setIsComplianceModalOpen(false)}>Cancel</Button>
+               </div>
+             </div>
+          </div>
+        </div>
+      )}
+
       <nav className={`sticky top-0 z-50 border-b shadow-sm ${isDarkTheme ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
@@ -2108,7 +2260,16 @@ const App = () => {
                 Admin Panel
               </button>
             )}
-             
+             {{!currentUser && page === 'login' && (
+  <AuthPage
+    users={users}
+    onLogin={(user) => {
+      setCurrentUser(user);
+      setPage('home');
+    }}
+    onRegister={() => setPage('register-freelancer')}
+  />
+)}
              {/* Sign In / Sign Up Mobile */}
              <div className="pt-4 border-t border-slate-100 mt-2">
                {!user ? (
