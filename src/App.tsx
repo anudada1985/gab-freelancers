@@ -1,18 +1,3 @@
-// ===============================
-// GAB FREELANCERS – ENHANCED SETUPS
-// Added:
-// ✔ LocalStorage persistence hooks
-// ✔ Freelancer lock until CNIC approved
-// ✔ Admin CNIC verification readiness
-// ✔ Backend-ready structure
-// NOTE: Core business logic untouched
-// ===============================
-
-import {
-  FreelancerRegister,
-  AdminRegistrationFieldEditor,
-  DEFAULT_FREELANCER_FIELDS
-} from './auth/Enhanced_Auth_Registration';
 import React, { useState, useEffect } from 'react';
 import { 
   Briefcase, 
@@ -85,8 +70,6 @@ const INITIAL_PLATFORM_PAYMENT: PlatformPaymentDetails = {
 };
 
 const INITIAL_JOBS: Job[] = [
-// Mock data removed
-
   {
     id: 'j1',
     title: 'E-commerce React Developer for Local Brand',
@@ -133,8 +116,6 @@ const INITIAL_JOBS: Job[] = [
 ];
 
 const INITIAL_FREELANCERS: FreelancerProfile[] = [
-// Mock data removed
-
   {
     id: 'f1',
     user: { 
@@ -163,8 +144,6 @@ const INITIAL_FREELANCERS: FreelancerProfile[] = [
 ];
 
 const MOCK_EARNINGS = [
-// Mock data removed
-
   { name: 'Jan', amount: 45000 },
   { name: 'Feb', amount: 52000 },
   { name: 'Mar', amount: 38000 },
@@ -174,8 +153,6 @@ const MOCK_EARNINGS = [
 ];
 
 const INITIAL_TRANSACTIONS: Transaction[] = [
-// Mock data removed
-
   { id: 't1', date: '2023-06-15', amount: 25000, type: 'Withdrawal', method: 'JazzCash', status: 'Completed' },
   { id: 't2', date: '2023-06-10', amount: 50000, type: 'Payment', method: 'Bank Transfer', status: 'Completed' },
 ];
@@ -730,9 +707,6 @@ const JobDetailsPage = ({
   const [bidAmount, setBidAmount] = useState(job.budget.toString());
   const [coverLetter, setCoverLetter] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [freelancerFields, setFreelancerFields] = useState(
-  DEFAULT_FREELANCER_FIELDS
-);
 
   const hasApplied = user && proposals.some(p => p.freelancerId === user.id);
   const jobProposals = proposals; // Already filtered in App
@@ -2248,7 +2222,6 @@ const App = () => {
                 </>
               )}
             </div>
-<Header user={currentUser} setPage={setPage} />
             
             {/* Mobile Menu Button */}
             <div className="flex items-center md:hidden">
@@ -2279,16 +2252,7 @@ const App = () => {
                 Admin Panel
               </button>
             )}
-             {{!currentUser && page === 'login' && (
-  <AuthPage
-    users={users}
-    onLogin={(user) => {
-      setCurrentUser(user);
-      setPage('home');
-    }}
-    onRegister={() => setPage('register-freelancer')}
-  />
-)}
+             
              {/* Sign In / Sign Up Mobile */}
              <div className="pt-4 border-t border-slate-100 mt-2">
                {!user ? (
