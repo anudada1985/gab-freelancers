@@ -2248,6 +2248,7 @@ const App = () => {
                 </>
               )}
             </div>
+<Header user={currentUser} setPage={setPage} />
             
             {/* Mobile Menu Button */}
             <div className="flex items-center md:hidden">
