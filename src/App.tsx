@@ -721,12 +721,6 @@ const FreelancersPage = ({ freelancers, onViewProfile }: { freelancers: Freelanc
           onViewProfile={() => onViewProfile(profile)}
         />
       ))}
-      {freelancers.filter(f => f.user.status === 'Active').length === 0 && (
-         <div className="col-span-full text-center py-12 text-slate-500 border border-dashed border-slate-300 rounded-xl">
-           <Users className="mx-auto mb-2 text-slate-300" size={48}/>
-           <p className="font-medium">No freelancers available.</p>
-         </div>
-      )}
     </div>
   </div>
 );
@@ -1616,8 +1610,8 @@ const AdminPage = ({
 // --- Main App Component ---
 
 const App = () => {
-  const [currentPage, setCurrentPage] = useState('home'); 
-  const [user, setUser] = useState<User | null>(null); // Initialized to null for login flow
+  const [currentPage, setCurrentPage] = useState('home');
+  const [user, setUser] = useState<User | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [selectedFreelancer, setSelectedFreelancer] = useState<FreelancerProfile | null>(null);
@@ -1717,13 +1711,13 @@ const App = () => {
   // --- Handlers ---
   const handleLogin = (u: User) => {
     setUser(u);
-    setCurrentPage('home'); 
+    setCurrentPage('dashboard'); 
   };
 
   const handleRegisterComplete = (newUser: User) => {
     setUsers([...users, newUser]);
     setUser(newUser);
-    setCurrentPage('home');
+    setCurrentPage('dashboard');
     setRegisterMode(false);
   };
 
