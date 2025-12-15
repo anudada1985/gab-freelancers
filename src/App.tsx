@@ -437,6 +437,10 @@ const JobDetailsPage = ({
   const [coverLetter, setCoverLetter] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Filter proposals for this specific job
+  const jobProposals = proposals.filter(p => p.jobId === job.id);
+  const hasApplied = user && proposals.some(p => p.freelancerId === user.id && p.jobId === job.id);
+
   const handleSubmitProposal = () => {
     if (!coverLetter) { alert("Please write a cover letter"); return; }
     setIsSubmitting(true);
@@ -480,7 +484,48 @@ const JobDetailsPage = ({
             </div>
           </div>
 
-          {showProposalForm && user?.role === UserRole.FREELANCER && (
+          {/* Client View: Show Proposals */}
+          {user && user.id === job.postedBy.id && (
+            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+              <h2 className="text-xl font-bold mb-4">Received Proposals ({jobProposals.length})</h2>
+              {jobProposals.length === 0 ? (
+                <p className="text-slate-500 italic">No proposals yet.</p>
+              ) : (
+                <div className="space-y-4">
+                  {jobProposals.map(p => (
+                    <div key={p.id} className="border p-4 rounded-lg hover:border-emerald-300 transition-colors">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-bold text-slate-900">{p.freelancerName}</h4>
+                          <p className="text-sm text-slate-500">{new Date(p.submittedAt).toLocaleDateString()}</p>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-bold text-emerald-600 block">PKR {p.bidAmount.toLocaleString()}</span>
+                          {p.status === 'Pending' && job.status === 'Open' && (
+                            <Button 
+                              className="mt-2 text-xs py-1 px-3" 
+                              onClick={() => {
+                                if(confirm("Are you sure you want to hire this freelancer? Funds will be moved to Escrow.")) {
+                                  onHire(p);
+                                }
+                              }}
+                            >
+                              Hire Now
+                            </Button>
+                          )}
+                          {p.status === 'Accepted' && <Badge color="emerald">Hired</Badge>}
+                        </div>
+                      </div>
+                      <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded">{p.coverLetter}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Freelancer View: Application Form */}
+          {user?.role === UserRole.FREELANCER && job.status === 'Open' && !hasApplied && showProposalForm && (
              <div className="bg-white p-8 rounded-xl border border-emerald-200 shadow-lg ring-1 ring-emerald-100">
                <h3 className="text-xl font-bold mb-6">Submit Your Proposal</h3>
                <div className="space-y-4">
@@ -512,6 +557,12 @@ const JobDetailsPage = ({
                </div>
              </div>
           )}
+          
+          {hasApplied && (
+            <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-blue-700 text-center font-medium">
+              You have already submitted a proposal for this job.
+            </div>
+          )}
         </div>
 
         <div className="space-y-6">
@@ -522,21 +573,23 @@ const JobDetailsPage = ({
             </div>
             
             {user?.role === UserRole.FREELANCER ? (
-              !showProposalForm ? (
+              !hasApplied && !showProposalForm ? (
                 <Button onClick={() => setShowProposalForm(true)} className="w-full mb-4">Apply Now</Button>
-              ) : (
-                <div className="text-center text-sm text-emerald-600 font-medium bg-emerald-50 p-3 rounded-lg mb-4">
-                  Drafting Proposal...
-                </div>
-              )
-            ) : (
-              <Button variant="secondary" className="w-full mb-4" onClick={() => alert("Edit functionality coming soon!")}>Edit Job Post</Button>
+              ) : null
+            ) : null}
+            
+            {user?.role === UserRole.CLIENT && user.id === job.postedBy.id && (
+               <Button variant="secondary" className="w-full mb-4" onClick={() => alert("Edit functionality coming soon!")}>Edit Job Post</Button>
             )}
             
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-slate-600">
                 <span>Proposals</span>
                 <span className="font-medium">{job.applicants}</span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>Status</span>
+                <span className={`font-medium ${job.status === 'Open' ? 'text-green-600' : 'text-blue-600'}`}>{job.status}</span>
               </div>
             </div>
           </div>
@@ -668,6 +721,12 @@ const FreelancersPage = ({ freelancers, onViewProfile }: { freelancers: Freelanc
           onViewProfile={() => onViewProfile(profile)}
         />
       ))}
+      {freelancers.filter(f => f.user.status === 'Active').length === 0 && (
+         <div className="col-span-full text-center py-12 text-slate-500 border border-dashed border-slate-300 rounded-xl">
+           <Users className="mx-auto mb-2 text-slate-300" size={48}/>
+           <p className="font-medium">No freelancers available.</p>
+         </div>
+      )}
     </div>
   </div>
 );
@@ -1072,19 +1131,43 @@ const DashboardPage = ({
         {/* Active Contracts / Workroom CTA */}
         <div className="bg-white p-6 rounded-xl border border-emerald-100 shadow-sm ring-1 ring-emerald-50">
           <h3 className="font-bold mb-4 flex items-center gap-2"><Briefcase size={18} className="text-emerald-600"/> Active Contracts</h3>
-          {jobs.filter(j => j.status === 'In Progress' && (j.postedBy.id === user?.id || j.assignedTo === user?.id)).map(job => (
+          {jobs.filter(j => j.status === 'In Progress' && (j.postedBy.id === user.id || j.assignedTo === user.id)).map(job => (
             <div key={job.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100 mb-2">
               <div>
                 <h4 className="font-medium text-slate-900">{job.title}</h4>
-                <p className="text-sm text-slate-500">{job.status}</p>
+                <p className="text-sm text-slate-500">Status: {job.status}</p>
               </div>
               <Button variant="primary" className="text-sm py-1" onClick={() => onEnterWorkroom(job)}>Enter Workroom</Button>
             </div>
           ))}
-          {jobs.filter(j => j.status === 'In Progress' && (j.postedBy.id === user?.id || j.assignedTo === user?.id)).length === 0 && (
-            <p className="text-slate-500 text-sm italic">No active jobs.</p>
+          {jobs.filter(j => j.status === 'In Progress' && (j.postedBy.id === user.id || j.assignedTo === user.id)).length === 0 && (
+            <p className="text-slate-500 text-sm italic">No active contracts found. Start hiring or applying!</p>
           )}
         </div>
+
+        {/* My Proposals Section (Freelancer Only) */}
+        {user.role === UserRole.FREELANCER && (
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <h3 className="font-bold mb-4 flex items-center gap-2"><FileText size={18} /> My Proposals</h3>
+            <div className="space-y-2">
+              {proposals.filter(p => p.freelancerId === user.id).map(p => {
+                const job = jobs.find(j => j.id === p.jobId);
+                return (
+                  <div key={p.id} className="flex justify-between items-center p-3 border-b border-slate-50 last:border-0">
+                    <div>
+                      <div className="font-medium text-sm text-slate-900">{job?.title || 'Unknown Job'}</div>
+                      <div className="text-xs text-slate-500">Bid: PKR {p.bidAmount}</div>
+                    </div>
+                    <Badge color={p.status === 'Accepted' ? 'emerald' : 'slate'}>{p.status}</Badge>
+                  </div>
+                );
+              })}
+              {proposals.filter(p => p.freelancerId === user.id).length === 0 && (
+                <p className="text-sm text-slate-500 italic">No proposals submitted yet.</p>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Earnings Chart */}
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
@@ -1110,19 +1193,6 @@ const DashboardPage = ({
             </ResponsiveContainer>
           </div>
         </div>
-
-        {user?.role === UserRole.FREELANCER && (
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-            <h3 className="font-bold mb-4">My Proposals</h3>
-            {proposals.filter(p => p.freelancerId === user.id).map(p => (
-              <div key={p.id} className="border-b py-2 last:border-0 flex justify-between">
-                <span className="text-sm">{jobs.find(j => j.id === p.jobId)?.title || 'Unknown Job'}</span>
-                <span className={`text-xs px-2 py-1 rounded ${p.status === 'Accepted' ? 'bg-green-100 text-green-700' : 'bg-gray-100'}`}>{p.status}</span>
-              </div>
-            ))}
-            {proposals.filter(p => p.freelancerId === user.id).length === 0 && <p className="text-slate-400 text-sm">No proposals sent.</p>}
-          </div>
-        )}
 
         {/* Recent Activity */}
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
@@ -1550,6 +1620,7 @@ const App = () => {
   const [user, setUser] = useState<User | null>(null); // Initialized to null for login flow
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [selectedFreelancer, setSelectedFreelancer] = useState<FreelancerProfile | null>(null);
   
   // Data State - Persistence - Uses 'v2' keys to invalidate old cache
   const [users, setUsers] = useState<User[]>(() => {
@@ -1586,7 +1657,6 @@ const App = () => {
 
   const [activeWorkroomJob, setActiveWorkroomJob] = useState<Job | undefined>(undefined);
   const [activeAds, setActiveAds] = useState<Advertisement[]>([]);
-  const [selectedFreelancer, setSelectedFreelancer] = useState<FreelancerProfile | null>(null);
   
   // UI State
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
@@ -1626,6 +1696,7 @@ const App = () => {
     const savedUser = localStorage.getItem('gab_session_v2');
     if (savedUser) {
       const parsedUser = JSON.parse(savedUser);
+      // Try to find the user in the latest users list, fallback to parsedUser
       const freshUser = users.find(u => u.id === parsedUser.id) || parsedUser;
       setUser(freshUser);
     } else {
