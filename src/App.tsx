@@ -47,7 +47,7 @@ import { UserRole } from './types';
 import { generateJobDescription } from './services/geminiService';
 import { AuthPage, RegisterPage } from './auth/Enhanced_Auth_Registration';
 
-// --- Constants & Mock Data ---
+// --- Constants (Configuration Only) ---
 
 const INITIAL_CATEGORIES = [
   'Web Development',
@@ -70,137 +70,6 @@ const INITIAL_PLATFORM_PAYMENT: PlatformPaymentDetails = {
   easyPaisaNumber: '0300-1234567',
   jazzCashNumber: '0300-7654321'
 };
-
-const MOCK_USER: User = {
-  id: 'u1',
-  name: 'Ahmed Hassan',
-  email: 'ahmed@example.com',
-  avatar: 'https://ui-avatars.com/api/?name=Ahmed+Hassan&background=random',
-  role: UserRole.FREELANCER,
-  verified: true,
-  balance: 154000,
-  status: 'Active',
-  agreedToTerms: true,
-  payoutDetails: {
-    method: 'Bank Transfer',
-    bankName: 'HBL',
-    accountTitle: 'Ahmed Hassan',
-    accountNumber: '1234567890'
-  }
-};
-
-const INITIAL_JOBS: Job[] = [
-  {
-    id: 'j1',
-    title: 'E-commerce React Developer for Local Brand',
-    description: 'We need an experienced React developer to build a clothing store frontend. Must integrate with JazzCash payment gateway API. The design is ready in Figma.\n\nResponsibilities:\n- Convert Figma designs to React components\n- Integrate JazzCash/EasyPaisa APIs\n- Ensure mobile responsiveness\n\nRequirements:\n- 3+ years React experience\n- Portfolio of e-commerce sites\n- Based in Pakistan for occasional syncs',
-    budget: 150000,
-    currency: 'PKR',
-    postedBy: { ...MOCK_USER, id: 'c1', name: 'Sapphire Textiles', email: 'hr@sapphire.com', role: UserRole.CLIENT, avatar: 'https://ui-avatars.com/api/?name=Sapphire+Textiles&background=random' },
-    postedAt: new Date().toISOString(),
-    category: 'Web Development',
-    type: 'Fixed Price',
-    applicants: 12,
-    status: 'In Progress',
-    assignedTo: 'f1'
-  },
-  {
-    id: 'j2',
-    title: 'Urdu Content Writer for Tech Blog',
-    description: 'Looking for a native Urdu speaker who understands technology terms. You will translate and write 5 articles per week about latest gadgets and software.\n\nMust have strong command over Urdu grammar and technical vocabulary.',
-    budget: 5000,
-    currency: 'PKR',
-    postedBy: { ...MOCK_USER, id: 'c2', name: 'TechPakistan', email: 'editor@techpakistan.com', role: UserRole.CLIENT, avatar: 'https://ui-avatars.com/api/?name=Tech+Pakistan&background=random' },
-    postedAt: new Date(Date.now() - 86400000).toISOString(),
-    category: 'Content Writing',
-    type: 'Fixed Price',
-    applicants: 45,
-    status: 'Open'
-  },
-  {
-    id: 'j3',
-    title: 'Tax Filing Assistant for Small Business',
-    description: 'Need a certified tax practitioner to help file annual returns for a small software house in Islamabad. Must be familiar with FBR portal and IT export tax exemptions.',
-    budget: 15000,
-    currency: 'PKR',
-    postedBy: { ...MOCK_USER, id: 'c3', name: 'SoftSync Solutions', email: 'accounts@softsync.pk', role: UserRole.CLIENT, avatar: 'https://ui-avatars.com/api/?name=SoftSync&background=random' },
-    postedAt: new Date(Date.now() - 172800000).toISOString(),
-    category: 'Tax Services',
-    type: 'Fixed Price',
-    applicants: 5,
-    status: 'Completed',
-    assignedTo: 'f2'
-  }
-];
-
-const INITIAL_FREELANCERS: FreelancerProfile[] = [
-  {
-    id: 'f1',
-    user: { 
-      id: 'u2', 
-      name: 'Sana Ali', 
-      email: 'sana@example.com',
-      avatar: 'https://ui-avatars.com/api/?name=Sana+Ali&background=random', 
-      role: UserRole.FREELANCER, 
-      verified: true, 
-      balance: 0, 
-      status: 'Active',
-      payoutDetails: {
-        method: 'EasyPaisa',
-        accountTitle: 'Sana Ali',
-        accountNumber: '0333-1234567'
-      }
-    },
-    title: 'Full Stack MERN Developer',
-    bio: 'Top rated developer with 5 years of experience building scalable web apps for startups in Pakistan and abroad.',
-    hourlyRate: 3500,
-    skills: ['React', 'Node.js', 'MongoDB', 'Tailwind'],
-    rating: 4.9,
-    jobsCompleted: 42,
-    totalEarned: 2500000
-  },
-  {
-    id: 'f2',
-    user: { 
-      id: 'u3', 
-      name: 'Bilal Khan', 
-      email: 'bilal@example.com',
-      avatar: 'https://ui-avatars.com/api/?name=Bilal+Khan&background=random', 
-      role: UserRole.FREELANCER, 
-      verified: false, 
-      balance: 0, 
-      status: 'Active',
-      payoutDetails: {
-        method: 'Bank Transfer',
-        bankName: 'Bank Alfalah',
-        accountTitle: 'Bilal Khan',
-        accountNumber: 'PK00BAFL000000001'
-      }
-    },
-    title: 'Corporate Tax Consultant',
-    bio: 'FBR registered tax practitioner helping freelancers and businesses save money and stay compliant.',
-    hourlyRate: 5000,
-    skills: ['Tax Filing', 'FBR', 'Corporate Law', 'Bookkeeping'],
-    rating: 5.0,
-    jobsCompleted: 120,
-    totalEarned: 4500000
-  }
-];
-
-const MOCK_EARNINGS = [
-  { name: 'Jan', amount: 45000 },
-  { name: 'Feb', amount: 52000 },
-  { name: 'Mar', amount: 38000 },
-  { name: 'Apr', amount: 65000 },
-  { name: 'May', amount: 58000 },
-  { name: 'Jun', amount: 85000 },
-];
-
-const INITIAL_TRANSACTIONS: Transaction[] = [
-  { id: 't1', date: '2023-06-15', amount: 25000, type: 'Withdrawal', method: 'JazzCash', status: 'Completed' },
-  { id: 't2', date: '2023-06-10', amount: 50000, type: 'Payment', method: 'Bank Transfer', status: 'Completed' },
-  { id: 't3', date: '2023-06-01', amount: 15000, type: 'Withdrawal', method: 'EasyPaisa', status: 'Completed' },
-];
 
 // --- Components ---
 
@@ -358,22 +227,24 @@ const HomePage = ({ setPage, categories, activeAds, jobs }: { setPage: (p: strin
     </section>
 
     {/* Featured Jobs */}
-    <section className="px-6 lg:px-20 bg-emerald-50/50 py-16 -mx-4 lg:-mx-20">
-      <div className="max-w-7xl mx-auto px-6 lg:px-20">
-        <div className="flex justify-between items-end mb-8">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900">Featured Jobs</h2>
-            <p className="text-slate-600">Top opportunities for you today</p>
+    {jobs.length > 0 && (
+      <section className="px-6 lg:px-20 bg-emerald-50/50 py-16 -mx-4 lg:-mx-20">
+        <div className="max-w-7xl mx-auto px-6 lg:px-20">
+          <div className="flex justify-between items-end mb-8">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900">Featured Jobs</h2>
+              <p className="text-slate-600">Top opportunities for you today</p>
+            </div>
+            <button onClick={() => setPage('jobs')} className="text-emerald-600 font-medium hover:underline">View All</button>
           </div>
-          <button onClick={() => setPage('jobs')} className="text-emerald-600 font-medium hover:underline">View All</button>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {jobs.slice(0,3).map(job => (
+              <JobCard key={job.id} job={job} onClick={() => setPage('jobs')} />
+            ))}
+          </div>
         </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {jobs.slice(0,3).map(job => (
-            <JobCard key={job.id} job={job} onClick={() => setPage('jobs')} />
-          ))}
-        </div>
-      </div>
-    </section>
+      </section>
+    )}
   </div>
 );
 
@@ -409,9 +280,17 @@ const JobsPage = ({ onSelectJob, categories, jobs }: { onSelectJob: (job: Job) =
 
       {/* Job List */}
       <div className="lg:col-span-3 space-y-4">
-        {jobs.map(job => (
-          <JobCard key={job.id} job={job} onClick={() => onSelectJob(job)} />
-        ))}
+        {jobs.length === 0 ? (
+          <div className="text-center py-20 bg-slate-50 rounded-xl border border-slate-200 border-dashed">
+            <Briefcase className="mx-auto text-slate-300 mb-4" size={48} />
+            <h3 className="text-lg font-bold text-slate-600">No Jobs Found</h3>
+            <p className="text-slate-500">Be the first to post a job!</p>
+          </div>
+        ) : (
+          jobs.map(job => (
+            <JobCard key={job.id} job={job} onClick={() => onSelectJob(job)} />
+          ))
+        )}
       </div>
     </div>
   </div>
@@ -462,10 +341,17 @@ const JobDetailsPage = ({
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
             <div className="flex justify-between items-start mb-6">
-              <h1 className="text-2xl font-bold text-slate-900">{job.title}</h1>
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${job.status === 'Open' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                {job.status}
-              </span>
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900">{job.title}</h1>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${job.status === 'Open' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                    {job.status}
+                  </span>
+                  <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
+                    {job.type}
+                  </span>
+                </div>
+              </div>
             </div>
             
             <div className="border-b border-slate-100 pb-6 mb-6">
@@ -568,14 +454,25 @@ const JobDetailsPage = ({
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
             <div className="mb-6">
-              <p className="text-sm text-slate-500 mb-1">Project Budget</p>
-              <p className="text-2xl font-bold text-slate-900">PKR {job.budget.toLocaleString()}</p>
+              <p className="text-sm text-slate-500 mb-1">
+                {job.type === 'Fixed Price' ? 'Project Budget' : 'Hourly Rate'}
+              </p>
+              <p className="text-2xl font-bold text-slate-900">
+                PKR {job.budget.toLocaleString()}
+                {job.type === 'Hourly' && <span className="text-sm font-normal text-slate-500">/hr</span>}
+              </p>
             </div>
             
             {user?.role === UserRole.FREELANCER ? (
               !hasApplied && !showProposalForm ? (
                 <Button onClick={() => setShowProposalForm(true)} className="w-full mb-4">Apply Now</Button>
-              ) : null
+              ) : (
+                !hasApplied && (
+                  <div className="text-center text-sm text-emerald-600 font-medium bg-emerald-50 p-3 rounded-lg mb-4">
+                    Drafting Proposal...
+                  </div>
+                )
+              )
             ) : null}
             
             {user?.role === UserRole.CLIENT && user.id === job.postedBy.id && (
@@ -601,8 +498,7 @@ const JobDetailsPage = ({
 
 const WorkroomPage = ({ onBack, user, onReleaseFunds, job }: { onBack: () => void; user: User; onReleaseFunds: () => void; job?: Job }) => {
   const [messages, setMessages] = useState([
-    { id: 1, text: "Hi! Thanks for hiring me. I'm excited to start.", sender: 'freelancer', time: '10:00 AM' },
-    { id: 2, text: "Welcome aboard! Let's get this done.", sender: 'client', time: '10:05 AM' },
+    { id: 1, text: "Welcome to the workroom! This is a secure space to collaborate.", sender: 'system', time: 'Just now' },
   ]);
   const [inputText, setInputText] = useState('');
   const [isFundsReleased, setIsFundsReleased] = useState(job?.status === 'Completed' || job?.status === 'Paid');
@@ -714,13 +610,21 @@ const FreelancersPage = ({ freelancers, onViewProfile }: { freelancers: Freelanc
     </div>
 
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {freelancers.filter(f => f.user.status === 'Active').map(profile => (
-        <FreelancerCard 
-          key={profile.id} 
-          profile={profile} 
-          onViewProfile={() => onViewProfile(profile)}
-        />
-      ))}
+      {freelancers.filter(f => f.user.status === 'Active').length === 0 ? (
+        <div className="col-span-full text-center py-20 bg-slate-50 rounded-xl border border-slate-200 border-dashed">
+          <Users className="mx-auto text-slate-300 mb-4" size={48} />
+          <h3 className="text-lg font-bold text-slate-600">No Freelancers Found</h3>
+          <p className="text-slate-500">More talent is joining soon!</p>
+        </div>
+      ) : (
+        freelancers.filter(f => f.user.status === 'Active').map(profile => (
+          <FreelancerCard 
+            key={profile.id} 
+            profile={profile} 
+            onViewProfile={() => onViewProfile(profile)}
+          />
+        ))
+      )}
     </div>
   </div>
 );
@@ -760,7 +664,7 @@ const PublicProfilePage = ({ profile, onBack }: { profile: FreelancerProfile, on
                 </div>
              </div>
              <div>
-                <Button className="w-full md:w-auto">Hire Now</Button>
+                <Button className="w-full md:w-auto" onClick={() => alert("To hire this freelancer, browse jobs or contact them directly (Feature coming soon).")}>Hire Now</Button>
              </div>
           </div>
           
@@ -813,6 +717,7 @@ const PostJobPage = ({ onPost, categories, user }: { onPost: (job: Job) => void,
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState(categories[0]);
   const [budget, setBudget] = useState('');
+  const [jobType, setJobType] = useState<'Fixed Price' | 'Hourly'>('Fixed Price');
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = async () => {
@@ -841,7 +746,7 @@ const PostJobPage = ({ onPost, categories, user }: { onPost: (job: Job) => void,
       postedBy: user,
       postedAt: new Date().toISOString(),
       category,
-      type: 'Fixed Price',
+      type: jobType,
       applicants: 0,
       status: 'Open'
     };
@@ -876,26 +781,40 @@ const PostJobPage = ({ onPost, categories, user }: { onPost: (job: Job) => void,
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Required Skills</label>
-            <input 
-              type="text" 
-              value={skills}
-              onChange={(e) => setSkills(e.target.value)}
+            <label className="block text-sm font-medium text-slate-700 mb-1">Job Type</label>
+            <select 
+              value={jobType}
+              onChange={(e) => setJobType(e.target.value as 'Fixed Price' | 'Hourly')}
               className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-              placeholder="e.g. FBR, Tax Law"
-            />
+            >
+              <option value="Fixed Price">Fixed Price</option>
+              <option value="Hourly">Hourly Rate</option>
+            </select>
           </div>
         </div>
         
         <div>
-           <label className="block text-sm font-medium text-slate-700 mb-1">Budget (PKR)</label>
+           <label className="block text-sm font-medium text-slate-700 mb-1">
+             {jobType === 'Fixed Price' ? 'Total Budget (PKR)' : 'Hourly Rate (PKR/hr)'}
+           </label>
            <input 
              type="number" 
              value={budget}
              onChange={(e) => setBudget(e.target.value)}
              className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-             placeholder="15000"
+             placeholder={jobType === 'Fixed Price' ? "15000" : "2500"}
            />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Required Skills</label>
+          <input 
+            type="text" 
+            value={skills}
+            onChange={(e) => setSkills(e.target.value)}
+            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+            placeholder="e.g. FBR, Tax Law"
+          />
         </div>
 
         <div>
@@ -1038,186 +957,204 @@ const DashboardPage = ({
   onWithdraw: () => void,
   jobs: Job[],
   proposals: Proposal[]
-}) => (
-  <div className="px-4 lg:px-20 py-8 min-h-screen">
+}) => {
+  // Logic to calculate chart data from transactions (since mock data is gone)
+  const calculateEarnings = () => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+    // In a real app, parse transaction dates. For demo, we'll return empty or simple aggregation
+    if (transactions.length === 0) return months.map(m => ({ name: m, amount: 0 }));
     
-    {/* Advertisements for Revenue */}
-    {activeAds.length > 0 && (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        {activeAds.map(ad => (
-          <div key={ad.id} className="bg-gradient-to-r from-amber-50 to-orange-50 border border-orange-100 p-4 rounded-xl flex items-center justify-between shadow-sm">
-            <div>
-              <span className="text-[10px] bg-orange-200 text-orange-800 px-1.5 py-0.5 rounded uppercase font-bold tracking-wide">Ad</span>
-              <h4 className="font-bold text-slate-800 mt-1">{ad.title}</h4>
-              <p className="text-sm text-slate-600">{ad.content}</p>
-            </div>
-            <Megaphone className="text-orange-400 opacity-50" size={32} />
-          </div>
-        ))}
-      </div>
-    )}
+    // Very simple mock aggregation just to show something if tx exist
+    return months.map(m => ({ name: m, amount: transactions.filter(t => t.type === 'Payment').reduce((acc, curr) => acc + (curr.amount/10), 0) }));
+  };
 
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  const earningsData = calculateEarnings();
+
+  return (
+    <div className="px-4 lg:px-20 py-8 min-h-screen">
       
-      {/* Sidebar Info */}
-      <div className="space-y-6">
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center">
-          <img src={user.avatar} alt="Profile" className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-emerald-50" />
-          <h2 className="text-xl font-bold">{user.name}</h2>
-          <p className="text-slate-500 mb-2">{user.role === 'CLIENT' ? 'Client Account' : 'Top Rated Freelancer'}</p>
-          {user.verified && <div className="flex justify-center mb-4"><VerificationBadge /></div>}
-          
-          <div className="border-t border-slate-100 pt-4">
-            <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Available Balance</p>
-            <div className="flex items-center justify-center gap-2 mb-2">
-               <p className="text-2xl font-bold text-emerald-600">PKR {user.balance.toLocaleString()}</p>
-            </div>
-            
-            {user.role === UserRole.CLIENT ? (
-              <Button onClick={onDeposit} className="w-full text-sm bg-slate-900 hover:bg-slate-800">
-                <Upload size={14} /> Add Funds
-              </Button>
-            ) : (
-              <Button onClick={onWithdraw} className="w-full text-sm">
-                <Download size={14} /> Withdraw Funds
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Commission Transparency (Only for Freelancers and Admin) */}
-        {(user.role === UserRole.FREELANCER || user.role === UserRole.ADMIN) && (
-          <div className="bg-white p-6 rounded-xl border border-blue-200 shadow-sm bg-blue-50/50">
-            <h3 className="font-bold mb-2 flex items-center gap-2 text-blue-900">
-              <FileSignature size={18} /> Service Fee
-            </h3>
-            <div className="flex justify-between items-center">
-               <span className="text-slate-600 text-sm">Commission Rate</span>
-               <span className="font-bold text-blue-700">10%</span>
-            </div>
-            <p className="text-xs text-slate-500 mt-2">
-              A flat 10% service fee is deducted from all earnings upon withdrawal. This covers platform maintenance, escrow security, and support.
-            </p>
-          </div>
-        )}
-
-        {/* Local Payouts Status */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <h3 className="font-bold mb-4 flex items-center gap-2">
-            <CreditCard size={18} /> {user.role === UserRole.CLIENT ? 'Payment Methods' : 'Payout Methods'}
-          </h3>
-          <div className="space-y-3">
-            {user.payoutDetails ? (
-               <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                <span className="text-sm font-medium">{user.payoutDetails.method}</span>
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Active</span>
-              </div>
-            ) : (
-              <p className="text-sm text-slate-500 italic">No payout methods added.</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="lg:col-span-2 space-y-6">
-        
-        {/* Active Contracts / Workroom CTA */}
-        <div className="bg-white p-6 rounded-xl border border-emerald-100 shadow-sm ring-1 ring-emerald-50">
-          <h3 className="font-bold mb-4 flex items-center gap-2"><Briefcase size={18} className="text-emerald-600"/> Active Contracts</h3>
-          {jobs.filter(j => j.status === 'In Progress' && (j.postedBy.id === user.id || j.assignedTo === user.id)).map(job => (
-            <div key={job.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100 mb-2">
+      {/* Advertisements for Revenue */}
+      {activeAds.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          {activeAds.map(ad => (
+            <div key={ad.id} className="bg-gradient-to-r from-amber-50 to-orange-50 border border-orange-100 p-4 rounded-xl flex items-center justify-between shadow-sm">
               <div>
-                <h4 className="font-medium text-slate-900">{job.title}</h4>
-                <p className="text-sm text-slate-500">Status: {job.status}</p>
+                <span className="text-[10px] bg-orange-200 text-orange-800 px-1.5 py-0.5 rounded uppercase font-bold tracking-wide">Ad</span>
+                <h4 className="font-bold text-slate-800 mt-1">{ad.title}</h4>
+                <p className="text-sm text-slate-600">{ad.content}</p>
               </div>
-              <Button variant="primary" className="text-sm py-1" onClick={() => onEnterWorkroom(job)}>Enter Workroom</Button>
+              <Megaphone className="text-orange-400 opacity-50" size={32} />
             </div>
           ))}
-          {jobs.filter(j => j.status === 'In Progress' && (j.postedBy.id === user.id || j.assignedTo === user.id)).length === 0 && (
-            <p className="text-slate-500 text-sm italic">No active contracts found. Start hiring or applying!</p>
-          )}
         </div>
+      )}
 
-        {/* My Proposals Section (Freelancer Only) */}
-        {user.role === UserRole.FREELANCER && (
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-            <h3 className="font-bold mb-4 flex items-center gap-2"><FileText size={18} /> My Proposals</h3>
-            <div className="space-y-2">
-              {proposals.filter(p => p.freelancerId === user.id).map(p => {
-                const job = jobs.find(j => j.id === p.jobId);
-                return (
-                  <div key={p.id} className="flex justify-between items-center p-3 border-b border-slate-50 last:border-0">
-                    <div>
-                      <div className="font-medium text-sm text-slate-900">{job?.title || 'Unknown Job'}</div>
-                      <div className="text-xs text-slate-500">Bid: PKR {p.bidAmount}</div>
-                    </div>
-                    <Badge color={p.status === 'Accepted' ? 'emerald' : 'slate'}>{p.status}</Badge>
-                  </div>
-                );
-              })}
-              {proposals.filter(p => p.freelancerId === user.id).length === 0 && (
-                <p className="text-sm text-slate-500 italic">No proposals submitted yet.</p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* Sidebar Info */}
+        <div className="space-y-6">
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center">
+            <img src={user.avatar} alt="Profile" className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-emerald-50" />
+            <h2 className="text-xl font-bold">{user.name}</h2>
+            <p className="text-slate-500 mb-2">{user.role === 'CLIENT' ? 'Client Account' : 'Freelancer Account'}</p>
+            {user.verified && <div className="flex justify-center mb-4"><VerificationBadge /></div>}
+            
+            <div className="border-t border-slate-100 pt-4">
+              <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Available Balance</p>
+              <div className="flex items-center justify-center gap-2 mb-2">
+                 <p className="text-2xl font-bold text-emerald-600">PKR {user.balance.toLocaleString()}</p>
+              </div>
+              
+              {user.role === UserRole.CLIENT ? (
+                <Button onClick={onDeposit} className="w-full text-sm bg-slate-900 hover:bg-slate-800">
+                  <Upload size={14} /> Add Funds
+                </Button>
+              ) : (
+                <Button onClick={onWithdraw} className="w-full text-sm">
+                  <Download size={14} /> Withdraw Funds
+                </Button>
               )}
             </div>
           </div>
-        )}
 
-        {/* Earnings Chart */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <div className="flex justify-between items-center mb-6">
-             <h3 className="font-bold">Earnings Overview</h3>
-             <select className="text-xs border border-slate-300 rounded p-1">
-               <option>Last 6 Months</option>
-               <option>This Year</option>
-             </select>
-          </div>
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={MOCK_EARNINGS}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" tick={{fontSize: 12}} />
-                <YAxis tick={{fontSize: 12}} />
-                <Tooltip 
-                  contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
-                  formatter={(value: number) => [`PKR ${value.toLocaleString()}`, 'Amount']}
-                />
-                <Bar dataKey="amount" fill="#10b981" radius={[4, 4, 0, 0]} barSize={40} />
-              </BarChart>
-            </ResponsiveContainer>
+          {/* Commission Transparency (Only for Freelancers and Admin) */}
+          {(user.role === UserRole.FREELANCER || user.role === UserRole.ADMIN) && (
+            <div className="bg-white p-6 rounded-xl border border-blue-200 shadow-sm bg-blue-50/50">
+              <h3 className="font-bold mb-2 flex items-center gap-2 text-blue-900">
+                <FileSignature size={18} /> Service Fee
+              </h3>
+              <div className="flex justify-between items-center">
+                 <span className="text-slate-600 text-sm">Commission Rate</span>
+                 <span className="font-bold text-blue-700">10%</span>
+              </div>
+              <p className="text-xs text-slate-500 mt-2">
+                A flat 10% service fee is deducted from all earnings upon withdrawal. This covers platform maintenance, escrow security, and support.
+              </p>
+            </div>
+          )}
+
+          {/* Local Payouts Status */}
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <h3 className="font-bold mb-4 flex items-center gap-2">
+              <CreditCard size={18} /> {user.role === UserRole.CLIENT ? 'Payment Methods' : 'Payout Methods'}
+            </h3>
+            <div className="space-y-3">
+              {user.payoutDetails ? (
+                 <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                  <span className="text-sm font-medium">{user.payoutDetails.method}</span>
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Active</span>
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500 italic">No payout methods added.</p>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <h3 className="font-bold mb-4">Recent Transactions</h3>
-          <div className="space-y-4">
-            {transactions.map(tx => (
-              <div key={tx.id} className="flex justify-between items-center pb-3 border-b border-slate-50 last:border-0 last:pb-0">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-full ${tx.type === 'Withdrawal' ? 'bg-orange-50 text-orange-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                    {tx.type === 'Withdrawal' ? <LogOut size={16} /> : <TrendingUp size={16} />}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">{tx.type} via {tx.method}</p>
-                    <p className="text-xs text-slate-400">{tx.date}</p>
-                  </div>
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-6">
+          
+          {/* Active Contracts / Workroom CTA */}
+          <div className="bg-white p-6 rounded-xl border border-emerald-100 shadow-sm ring-1 ring-emerald-50">
+            <h3 className="font-bold mb-4 flex items-center gap-2"><Briefcase size={18} className="text-emerald-600"/> Active Contracts</h3>
+            {jobs.filter(j => j.status === 'In Progress' && (j.postedBy.id === user.id || j.assignedTo === user.id)).map(job => (
+              <div key={job.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100 mb-2">
+                <div>
+                  <h4 className="font-medium text-slate-900">{job.title}</h4>
+                  <p className="text-sm text-slate-500">Status: {job.status}</p>
                 </div>
-                <div className="text-right">
-                  <p className={`text-sm font-bold ${tx.type === 'Withdrawal' ? 'text-slate-900' : 'text-emerald-600'}`}>
-                    {tx.type === 'Withdrawal' ? '-' : '+'} PKR {tx.amount.toLocaleString()}
-                  </p>
-                  <span className="text-xs text-slate-400">{tx.status}</span>
-                </div>
+                <Button variant="primary" className="text-sm py-1" onClick={() => onEnterWorkroom(job)}>Enter Workroom</Button>
               </div>
             ))}
+            {jobs.filter(j => j.status === 'In Progress' && (j.postedBy.id === user.id || j.assignedTo === user.id)).length === 0 && (
+              <p className="text-slate-500 text-sm italic">No active contracts found. Start hiring or applying!</p>
+            )}
           </div>
-        </div>
 
+          {/* My Proposals Section (Freelancer Only) */}
+          {user.role === UserRole.FREELANCER && (
+            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+              <h3 className="font-bold mb-4 flex items-center gap-2"><FileText size={18} /> My Proposals</h3>
+              <div className="space-y-2">
+                {proposals.filter(p => p.freelancerId === user.id).map(p => {
+                  const job = jobs.find(j => j.id === p.jobId);
+                  return (
+                    <div key={p.id} className="flex justify-between items-center p-3 border-b border-slate-50 last:border-0">
+                      <div>
+                        <div className="font-medium text-sm text-slate-900">{job?.title || 'Unknown Job'}</div>
+                        <div className="text-xs text-slate-500">Bid: PKR {p.bidAmount}</div>
+                      </div>
+                      <Badge color={p.status === 'Accepted' ? 'emerald' : 'slate'}>{p.status}</Badge>
+                    </div>
+                  );
+                })}
+                {proposals.filter(p => p.freelancerId === user.id).length === 0 && (
+                  <p className="text-sm text-slate-500 italic">No proposals submitted yet.</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Earnings Chart */}
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <div className="flex justify-between items-center mb-6">
+               <h3 className="font-bold">Earnings Overview</h3>
+               <select className="text-xs border border-slate-300 rounded p-1">
+                 <option>Last 6 Months</option>
+                 <option>This Year</option>
+               </select>
+            </div>
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={earningsData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" tick={{fontSize: 12}} />
+                  <YAxis tick={{fontSize: 12}} />
+                  <Tooltip 
+                    contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
+                    formatter={(value: number) => [`PKR ${value.toLocaleString()}`, 'Amount']}
+                  />
+                  <Bar dataKey="amount" fill="#10b981" radius={[4, 4, 0, 0]} barSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <h3 className="font-bold mb-4">Recent Transactions</h3>
+            <div className="space-y-4">
+              {transactions.length === 0 ? (
+                <p className="text-sm text-slate-500 italic">No transactions yet.</p>
+              ) : (
+                transactions.map(tx => (
+                  <div key={tx.id} className="flex justify-between items-center pb-3 border-b border-slate-50 last:border-0 last:pb-0">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-full ${tx.type === 'Withdrawal' ? 'bg-orange-50 text-orange-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                        {tx.type === 'Withdrawal' ? <LogOut size={16} /> : <TrendingUp size={16} />}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">{tx.type} via {tx.method}</p>
+                        <p className="text-xs text-slate-400">{tx.date}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-sm font-bold ${tx.type === 'Withdrawal' ? 'text-slate-900' : 'text-emerald-600'}`}>
+                        {tx.type === 'Withdrawal' ? '-' : '+'} PKR {tx.amount.toLocaleString()}
+                      </p>
+                      <span className="text-xs text-slate-400">{tx.status}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const AdminPage = ({ 
   categories, 
@@ -1610,8 +1547,8 @@ const AdminPage = ({
 // --- Main App Component ---
 
 const App = () => {
-  const [currentPage, setCurrentPage] = useState('home');
-  const [user, setUser] = useState<User | null>(null);
+  const [currentPage, setCurrentPage] = useState('home'); 
+  const [user, setUser] = useState<User | null>(null); // Initialized to null for login flow
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [selectedFreelancer, setSelectedFreelancer] = useState<FreelancerProfile | null>(null);
@@ -1623,7 +1560,7 @@ const App = () => {
   });
   const [jobs, setJobs] = useState<Job[]>(() => {
     const saved = localStorage.getItem('gab_jobs_v2');
-    return saved ? JSON.parse(saved) : INITIAL_JOBS;
+    return saved ? JSON.parse(saved) : [];
   });
   const [proposals, setProposals] = useState<Proposal[]>(() => {
     const saved = localStorage.getItem('gab_proposals_v2');
@@ -1631,7 +1568,7 @@ const App = () => {
   });
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
     const saved = localStorage.getItem('gab_transactions_v2');
-    return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
+    return saved ? JSON.parse(saved) : [];
   });
   
   // Derived State
@@ -1647,7 +1584,7 @@ const App = () => {
         jobsCompleted: u.jobsCompleted || 0,
         totalEarned: 0
       }))
-    : INITIAL_FREELANCERS;
+    : [];
 
   const [activeWorkroomJob, setActiveWorkroomJob] = useState<Job | undefined>(undefined);
   const [activeAds, setActiveAds] = useState<Advertisement[]>([]);
@@ -1711,13 +1648,13 @@ const App = () => {
   // --- Handlers ---
   const handleLogin = (u: User) => {
     setUser(u);
-    setCurrentPage('dashboard'); 
+    setCurrentPage('dashboard'); // Redirect to dashboard immediately after login
   };
 
   const handleRegisterComplete = (newUser: User) => {
     setUsers([...users, newUser]);
     setUser(newUser);
-    setCurrentPage('dashboard');
+    setCurrentPage('dashboard'); // Redirect to dashboard after registration
     setRegisterMode(false);
   };
 
