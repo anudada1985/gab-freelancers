@@ -1292,6 +1292,31 @@ const DashboardPage = ({
           )}
         </div>
 
+        {/* Earnings Chart */}
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex justify-between items-center mb-6">
+             <h3 className="font-bold">Earnings Overview</h3>
+             <select className="text-xs border border-slate-300 rounded p-1">
+               <option>Last 6 Months</option>
+               <option>This Year</option>
+             </select>
+          </div>
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={MOCK_EARNINGS}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" tick={{fontSize: 12}} />
+                <YAxis tick={{fontSize: 12}} />
+                <Tooltip 
+                  contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
+                  formatter={(value: number) => [`PKR ${value.toLocaleString()}`, 'Amount']}
+                />
+                <Bar dataKey="amount" fill="#10b981" radius={[4, 4, 0, 0]} barSize={40} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
         {user?.role === UserRole.FREELANCER && (
           <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
             <h3 className="font-bold mb-4">My Proposals</h3>
