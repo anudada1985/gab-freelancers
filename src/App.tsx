@@ -1166,18 +1166,22 @@ const ProfilePage = ({ user, onSave, onBack }: { user: User, onSave: (u: User) =
 
 const DashboardPage = ({ 
   user, 
-  onOpenWorkroom, 
+  onEnterWorkroom, 
   activeAds, 
   transactions,
   onDeposit,
-  onWithdraw
+  onWithdraw,
+  jobs,
+  proposals
 }: { 
   user: User; 
-  onOpenWorkroom: () => void, 
+  onEnterWorkroom: (job: Job) => void, 
   activeAds: Advertisement[], 
   transactions: Transaction[],
   onDeposit: () => void,
-  onWithdraw: () => void
+  onWithdraw: () => void,
+  jobs: Job[],
+  proposals: Proposal[]
 }) => (
   <div className="px-4 lg:px-20 py-8 min-h-screen">
     
@@ -1202,15 +1206,15 @@ const DashboardPage = ({
       {/* Sidebar Info */}
       <div className="space-y-6">
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center">
-          <img src={user?.avatar} alt="Profile" className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-emerald-50" />
-          <h2 className="text-xl font-bold">{user?.name}</h2>
-          <p className="text-slate-500 mb-2">{user?.role === 'CLIENT' ? 'Client Account' : 'Top Rated Freelancer'}</p>
+          <img src={user.avatar} alt="Profile" className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-emerald-50" />
+          <h2 className="text-xl font-bold">{user.name}</h2>
+          <p className="text-slate-500 mb-2">{user.role === 'CLIENT' ? 'Client Account' : 'Top Rated Freelancer'}</p>
           {user.verified && <div className="flex justify-center mb-4"><VerificationBadge /></div>}
           
           <div className="border-t border-slate-100 pt-4">
             <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Available Balance</p>
             <div className="flex items-center justify-center gap-2 mb-2">
-               <p className="text-2xl font-bold text-emerald-600">PKR {user?.balance.toLocaleString()}</p>
+               <p className="text-2xl font-bold text-emerald-600">PKR {user.balance.toLocaleString()}</p>
             </div>
             
             {user.role === UserRole.CLIENT ? (
@@ -1264,20 +1268,33 @@ const DashboardPage = ({
         
         {/* Active Contracts / Workroom CTA */}
         <div className="bg-white p-6 rounded-xl border border-emerald-100 shadow-sm ring-1 ring-emerald-50">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold text-slate-900 flex items-center gap-2">
-              <Briefcase size={18} className="text-emerald-600"/> Active Contracts
-            </h3>
-            <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">1 Active</span>
-          </div>
-          <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100">
-            <div>
-              <h4 className="font-medium text-slate-900">E-commerce React Developer</h4>
-              <p className="text-sm text-slate-500">Sapphire Textiles • Due in 5 days</p>
+          <h3 className="font-bold mb-4 flex items-center gap-2"><Briefcase size={18} className="text-emerald-600"/> Active Contracts</h3>
+          {jobs.filter(j => j.status === 'In Progress' && (j.postedBy.id === user?.id || j.assignedTo === user?.id)).map(job => (
+            <div key={job.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100 mb-2">
+              <div>
+                <h4 className="font-medium text-slate-900">{job.title}</h4>
+                <p className="text-sm text-slate-500">{job.status}</p>
+              </div>
+              <Button variant="primary" className="text-sm py-1" onClick={() => onEnterWorkroom(job)}>Enter Workroom</Button>
             </div>
-            <Button variant="primary" className="text-sm py-1" onClick={onOpenWorkroom}>Enter Workroom</Button>
-          </div>
+          ))}
+          {jobs.filter(j => j.status === 'In Progress' && (j.postedBy.id === user?.id || j.assignedTo === user?.id)).length === 0 && (
+            <p className="text-slate-500 text-sm italic">No active jobs.</p>
+          )}
         </div>
+
+        {user?.role === UserRole.FREELANCER && (
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <h3 className="font-bold mb-4">My Proposals</h3>
+            {proposals.filter(p => p.freelancerId === user.id).map(p => (
+              <div key={p.id} className="border-b py-2 last:border-0 flex justify-between">
+                <span className="text-sm">{jobs.find(j => j.id === p.jobId)?.title || 'Unknown Job'}</span>
+                <span className={`text-xs px-2 py-1 rounded ${p.status === 'Accepted' ? 'bg-green-100 text-green-700' : 'bg-gray-100'}`}>{p.status}</span>
+              </div>
+            ))}
+            {proposals.filter(p => p.freelancerId === user.id).length === 0 && <p className="text-slate-400 text-sm">No proposals sent.</p>}
+          </div>
+        )}
 
         {/* Recent Activity */}
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
@@ -2034,64 +2051,16 @@ const App = () => {
         </div>
       );
       case 'dashboard': return ProtectedRoute(
-        <div className="px-4 lg:px-20 py-8 min-h-screen">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="space-y-6">
-              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center">
-                <img src={user?.avatar} alt="Profile" className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-emerald-50" />
-                <h2 className="text-xl font-bold">{user?.name}</h2>
-                <p className="text-slate-500 mb-2">{user?.role}</p>
-                {user?.verified && <div className="flex justify-center mb-4"><VerificationBadge /></div>}
-                
-                <Button variant="outline" className="w-full mb-4 text-xs" onClick={() => setCurrentPage('profile')}>
-                  <Edit3 size={14}/> Edit Profile
-                </Button>
-
-                <div className="border-t border-slate-100 pt-4">
-                  <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Available Balance</p>
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                     <p className="text-2xl font-bold text-emerald-600">PKR {user?.balance.toLocaleString()}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={() => { setWalletModalType('Deposit'); setIsWalletModalOpen(true); }} className="flex-1 text-xs bg-slate-900">Add</Button>
-                    <Button onClick={() => { setWalletModalType('Withdrawal'); setIsWalletModalOpen(true); }} className="flex-1 text-xs" variant="secondary">Withdraw</Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white p-6 rounded-xl border border-emerald-100 shadow-sm ring-1 ring-emerald-50">
-                <h3 className="font-bold mb-4 flex items-center gap-2"><Briefcase size={18}/> Active Contracts</h3>
-                {jobs.filter(j => j.status === 'In Progress' && (j.postedBy.id === user?.id || j.assignedTo === user?.id)).map(job => (
-                  <div key={job.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100 mb-2">
-                    <div>
-                      <h4 className="font-medium text-slate-900">{job.title}</h4>
-                      <p className="text-sm text-slate-500">{job.status}</p>
-                    </div>
-                    <Button variant="primary" className="text-sm py-1" onClick={() => { setActiveWorkroomJob(job); setCurrentPage('workroom'); }}>Enter Workroom</Button>
-                  </div>
-                ))}
-                {jobs.filter(j => j.status === 'In Progress' && (j.postedBy.id === user?.id || j.assignedTo === user?.id)).length === 0 && (
-                  <p className="text-slate-500 text-sm italic">No active jobs.</p>
-                )}
-              </div>
-
-              {user?.role === UserRole.FREELANCER && (
-                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                  <h3 className="font-bold mb-4">My Proposals</h3>
-                  {proposals.filter(p => p.freelancerId === user.id).map(p => (
-                    <div key={p.id} className="border-b py-2 last:border-0 flex justify-between">
-                      <span className="text-sm">{jobs.find(j => j.id === p.jobId)?.title || 'Unknown Job'}</span>
-                      <span className={`text-xs px-2 py-1 rounded ${p.status === 'Accepted' ? 'bg-green-100 text-green-700' : 'bg-gray-100'}`}>{p.status}</span>
-                    </div>
-                  ))}
-                  {proposals.filter(p => p.freelancerId === user.id).length === 0 && <p className="text-slate-400 text-sm">No proposals sent.</p>}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        <DashboardPage 
+          user={user!} // ProtectedRoute ensures user is not null
+          onEnterWorkroom={(job) => { setActiveWorkroomJob(job); setCurrentPage('workroom'); }} 
+          activeAds={activeAds} 
+          transactions={transactions}
+          onDeposit={() => { setWalletModalType('Deposit'); setIsWalletModalOpen(true); }}
+          onWithdraw={() => { setWalletModalType('Withdrawal'); setIsWalletModalOpen(true); }}
+          jobs={jobs}
+          proposals={proposals}
+        />
       );
       case 'profile': return user ? <ProfilePage user={user} onSave={handleUpdateProfile} onBack={() => setCurrentPage('dashboard')} /> : ProtectedRoute(null);
       case 'post-job': return user ? <PostJobPage onPost={handlePostJob} categories={INITIAL_CATEGORIES} user={user} /> : ProtectedRoute(null);
@@ -2409,27 +2378,49 @@ const App = () => {
           <div>
             <h4 className="font-bold text-white mb-4">For Freelancers</h4>
             <ul className="space-y-2 text-sm opacity-70">
-              <li>Find Work</li>
-              <li>Create Profile</li>
-              <li>Success Stories</li>
-              <li>Resources</li>
+              <li>
+                <button onClick={() => setCurrentPage('jobs')} className="hover:text-emerald-500 transition-colors text-left">Find Work</button>
+              </li>
+              <li>
+                <button onClick={() => {
+                  if (user && user.role === UserRole.FREELANCER) {
+                    setCurrentPage('profile');
+                  } else if (!user) {
+                     setRegisterMode(true);
+                     setCurrentPage('auth');
+                  } else {
+                    alert("Please log in as a freelancer to edit your profile.");
+                  }
+                }} className="hover:text-emerald-500 transition-colors text-left">Create Profile</button>
+              </li>
             </ul>
           </div>
           <div>
             <h4 className="font-bold text-white mb-4">For Clients</h4>
             <ul className="space-y-2 text-sm opacity-70">
-              <li>Post a Job</li>
-              <li>Find Talent</li>
-              <li>Enterprise Solutions</li>
-              <li>Escrow Protection</li>
+              <li>
+                <button onClick={() => {
+                  if (user && user.role === UserRole.CLIENT) {
+                    setCurrentPage('post-job');
+                  } else if (!user) {
+                     setRegisterMode(true);
+                     setCurrentPage('auth');
+                  } else {
+                    alert("Please log in as a client to post a job.");
+                  }
+                }} className="hover:text-emerald-500 transition-colors text-left">Post a Job</button>
+              </li>
+              <li>
+                <button onClick={() => setCurrentPage('freelancers')} className="hover:text-emerald-500 transition-colors text-left">Find Talent</button>
+              </li>
             </ul>
           </div>
           <div>
             <h4 className="font-bold text-white mb-4">Payment Partners</h4>
             <div className="flex gap-2">
-               <div className="bg-white/10 px-2 py-1 rounded text-xs">JazzCash</div>
-               <div className="bg-white/10 px-2 py-1 rounded text-xs">EasyPaisa</div>
-               <div className="bg-white/10 px-2 py-1 rounded text-xs">Raast</div>
+               <div className="bg-white/10 px-2 py-1 rounded text-xs cursor-help" title="Integrated">JazzCash</div>
+               <div className="bg-white/10 px-2 py-1 rounded text-xs cursor-help" title="Integrated">EasyPaisa</div>
+               <div className="bg-white/10 px-2 py-1 rounded text-xs cursor-help" title="Integrated">Raast</div>
             </div>
           </div>
         </div>
