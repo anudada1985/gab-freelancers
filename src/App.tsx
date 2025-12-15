@@ -28,7 +28,6 @@ import {
   UserCircle,
   Mail,
   Key,
-  Edit3,
   Save,
   LogIn,
   UserPlus,
@@ -36,6 +35,7 @@ import {
   FileBadge,
   TrendingUp
 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 import { JobCard, FreelancerCard, Button, VerificationBadge, Badge } from './components/UIComponents';
 import type { Job, FreelancerProfile, User, Transaction, Advertisement, PayoutDetails, PlatformPaymentDetails, Proposal } from './types';
@@ -138,6 +138,15 @@ const INITIAL_FREELANCERS: FreelancerProfile[] = [
     jobsCompleted: 42,
     totalEarned: 2500000
   }
+];
+
+const MOCK_EARNINGS = [
+  { name: 'Jan', amount: 45000 },
+  { name: 'Feb', amount: 52000 },
+  { name: 'Mar', amount: 38000 },
+  { name: 'Apr', amount: 65000 },
+  { name: 'May', amount: 58000 },
+  { name: 'Jun', amount: 85000 },
 ];
 
 const INITIAL_TRANSACTIONS: Transaction[] = [
