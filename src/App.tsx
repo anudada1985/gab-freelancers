@@ -85,6 +85,8 @@ const INITIAL_PLATFORM_PAYMENT: PlatformPaymentDetails = {
 };
 
 const INITIAL_JOBS: Job[] = [
+// Mock data removed
+
   {
     id: 'j1',
     title: 'E-commerce React Developer for Local Brand',
@@ -131,6 +133,8 @@ const INITIAL_JOBS: Job[] = [
 ];
 
 const INITIAL_FREELANCERS: FreelancerProfile[] = [
+// Mock data removed
+
   {
     id: 'f1',
     user: { 
@@ -159,6 +163,8 @@ const INITIAL_FREELANCERS: FreelancerProfile[] = [
 ];
 
 const MOCK_EARNINGS = [
+// Mock data removed
+
   { name: 'Jan', amount: 45000 },
   { name: 'Feb', amount: 52000 },
   { name: 'Mar', amount: 38000 },
@@ -168,6 +174,8 @@ const MOCK_EARNINGS = [
 ];
 
 const INITIAL_TRANSACTIONS: Transaction[] = [
+// Mock data removed
+
   { id: 't1', date: '2023-06-15', amount: 25000, type: 'Withdrawal', method: 'JazzCash', status: 'Completed' },
   { id: 't2', date: '2023-06-10', amount: 50000, type: 'Payment', method: 'Bank Transfer', status: 'Completed' },
 ];
