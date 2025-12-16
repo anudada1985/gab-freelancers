@@ -2,9 +2,10 @@ import React from 'react';
 import { 
   ShieldCheck, 
   Clock,
-  Star
+  Star,
+  Heart
 } from 'lucide-react';
-import type { Job, FreelancerProfile } from '../types';
+import type { Job, FreelancerProfile, Service } from '../types';
 
 // --- Badges ---
 
@@ -92,6 +93,43 @@ export const JobCard: React.FC<{ job: Job; onClick: () => void }> = ({ job, onCl
   </div>
 );
 
+export const ServiceCard: React.FC<{ service: Service; onClick: () => void }> = ({ service, onClick }) => (
+  <div 
+    onClick={onClick}
+    className="group bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-xl transition-all cursor-pointer flex flex-col h-full"
+  >
+    <div className="relative h-48 overflow-hidden">
+      <img src={service.image} alt={service.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+      <div className="absolute top-3 right-3 bg-white/90 p-1.5 rounded-full hover:bg-white text-slate-400 hover:text-red-500 transition-colors shadow-sm">
+        <Heart size={16} />
+      </div>
+    </div>
+    
+    <div className="p-4 flex-1 flex flex-col">
+      <div className="flex items-center gap-2 mb-3">
+        <img src={service.freelancer.avatar} className="w-6 h-6 rounded-full border border-slate-100" />
+        <span className="text-sm font-bold text-slate-900 truncate">{service.freelancer.name}</span>
+        {service.freelancer.verified && <ShieldCheck size={12} className="text-emerald-500" />}
+      </div>
+      
+      <h3 className="font-medium text-slate-800 mb-2 line-clamp-2 hover:text-emerald-600 transition-colors flex-1">
+        {service.title}
+      </h3>
+      
+      <div className="flex items-center gap-1 text-sm text-yellow-500 font-bold mb-4">
+        <Star size={14} fill="currentColor" />
+        <span>{service.rating}</span>
+        <span className="text-slate-400 font-normal">({service.reviewsCount})</span>
+      </div>
+      
+      <div className="flex items-center justify-between pt-3 border-t border-slate-100 mt-auto">
+        <div className="text-xs text-slate-500 uppercase font-medium">Starting at</div>
+        <div className="text-lg font-bold text-emerald-600">PKR {service.price.toLocaleString()}</div>
+      </div>
+    </div>
+  </div>
+);
+
 export const FreelancerCard: React.FC<{ profile: FreelancerProfile; onViewProfile?: () => void }> = ({ profile, onViewProfile }) => (
   <div className="bg-white p-6 rounded-xl border border-slate-200 hover:shadow-md transition-shadow">
     <div className="flex items-center gap-4 mb-4">
@@ -142,7 +180,7 @@ export const FreelancerCard: React.FC<{ profile: FreelancerProfile; onViewProfil
 
 interface ButtonProps {
   children: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
   className?: string;
   onClick?: () => void;
   disabled?: boolean;
@@ -162,7 +200,8 @@ export const Button: React.FC<ButtonProps> = ({
     primary: "bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm hover:shadow-emerald-200",
     secondary: "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50",
     outline: "border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50",
-    ghost: "text-slate-600 hover:bg-slate-100"
+    ghost: "text-slate-600 hover:bg-slate-100",
+    danger: "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
   };
 
   return (
