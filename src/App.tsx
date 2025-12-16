@@ -8,12 +8,10 @@ import {
   Menu, 
   X, 
   LogOut,
-  Wallet,
   TrendingUp,
   ShieldCheck,
   ChevronLeft,
   Send,
-  Paperclip,
   CheckCircle2,
   FileText,
   Clock,
@@ -30,19 +28,15 @@ import {
   Building,
   BarChart2,
   UserCircle,
-  Mail,
-  Key,
   Save,
   LogIn,
   UserPlus,
-  Camera,
-  FileBadge,
   Star,
   MessageSquare
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-import { JobCard, FreelancerCard, Button, VerificationBadge, PaymentMethodBadge, Badge } from './components/UIComponents';
+import { JobCard, FreelancerCard, Button, VerificationBadge, Badge } from './components/UIComponents';
 import type { Job, FreelancerProfile, User, Transaction, Advertisement, PayoutDetails, PlatformPaymentDetails, Proposal } from './types';
 import { UserRole } from './types';
 import { generateJobDescription } from './services/geminiService';
@@ -691,7 +685,7 @@ const WorkroomPage = ({ onBack, user, onReleaseFunds, job }: { onBack: () => voi
   );
 };
 
-const ChatPage = ({ onBack, currentUser, peerUser }: { onBack: () => void; currentUser: User; peerUser: FreelancerProfile }) => {
+const ChatPage = ({ onBack, peerUser }: { onBack: () => void; peerUser: FreelancerProfile }) => {
   const [messages, setMessages] = useState([
     { id: 1, text: `Hi ${peerUser.user.name}, I noticed your profile and I'm interested in your services.`, sender: 'me', time: '10:00 AM' },
   ]);
@@ -723,7 +717,7 @@ const ChatPage = ({ onBack, currentUser, peerUser }: { onBack: () => void; curre
 
       <div className="flex-1 bg-slate-50 border-x border-slate-200 overflow-y-auto p-4 space-y-4">
         {messages.map(msg => (
-          <div key={msg.id} className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
+          <div key={msg.id} className={`flex ${msg.sender === 'me' ? 'justify-end' : (msg.sender === 'them' ? 'justify-start' : 'justify-start')}`}>
             <div className={`max-w-[75%] rounded-xl p-3 shadow-sm ${msg.sender === 'me' ? 'bg-emerald-600 text-white rounded-br-none' : 'bg-white text-slate-800 border border-slate-200 rounded-bl-none'}`}>
               <p className="text-sm">{msg.text}</p>
               <p className={`text-[10px] mt-1 text-right ${msg.sender === 'me' ? 'text-emerald-100' : 'text-slate-400'}`}>{msg.time}</p>
@@ -1332,7 +1326,7 @@ const DashboardPage = ({
 const AdminPage = ({ 
   categories, 
   onAddCategory, 
-  onDeleteCategory,
+  onDeleteCategory, 
   freelancers,
   onToggleFreelancerStatus,
   ads,
@@ -1721,12 +1715,12 @@ const AdminPage = ({
 
 const App = () => {
   const [currentPage, setCurrentPage] = useState('home'); 
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(null); // Initialized to null for login flow
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [selectedFreelancer, setSelectedFreelancer] = useState<FreelancerProfile | null>(null);
   
-  // Data State - Persistence
+  // Data State - Persistence - Uses 'v2' keys to invalidate old cache
   const [users, setUsers] = useState<User[]>(() => {
     const saved = localStorage.getItem('gab_users_v2');
     return saved ? JSON.parse(saved) : [];
@@ -1744,20 +1738,20 @@ const App = () => {
     return saved ? JSON.parse(saved) : [];
   });
   
-  // Derived State for Freelancers (Only users with FREELANCER role)
-  const freelancers: FreelancerProfile[] = users
-    .filter(u => u.role === UserRole.FREELANCER)
-    .map(u => ({
-      id: u.id,
-      user: u,
-      title: u.title || 'Freelancer',
-      bio: u.bio || 'No bio available.',
-      hourlyRate: u.hourlyRate || 0,
-      skills: u.skills || [],
-      rating: u.rating || 0,
-      jobsCompleted: u.jobsCompleted || 0,
-      totalEarned: 0 // Mock calculation could go here
-    }));
+  // Derived State
+  const freelancers: FreelancerProfile[] = users.length > 0 
+    ? users.filter(u => u.role === UserRole.FREELANCER).map(u => ({
+        id: u.id,
+        user: u,
+        title: u.title || '',
+        bio: u.bio || '',
+        hourlyRate: u.hourlyRate || 0,
+        skills: u.skills || [],
+        rating: u.rating || 0,
+        jobsCompleted: u.jobsCompleted || 0,
+        totalEarned: 0
+      }))
+    : [];
 
   const [activeWorkroomJob, setActiveWorkroomJob] = useState<Job | undefined>(undefined);
   const [activeAds, setActiveAds] = useState<Advertisement[]>([]);
@@ -1797,11 +1791,16 @@ const App = () => {
 
   // Load active user session on mount
   useEffect(() => {
+    // Note: Changed key to 'gab_session_v2' to invalidate old session
     const savedUser = localStorage.getItem('gab_session_v2');
     if (savedUser) {
       const parsedUser = JSON.parse(savedUser);
+      // Try to find the user in the latest users list, fallback to parsedUser
       const freshUser = users.find(u => u.id === parsedUser.id) || parsedUser;
       setUser(freshUser);
+    } else {
+      // Clear old session just in case
+      localStorage.removeItem('gab_active_user'); 
     }
   }, []); 
 
@@ -1817,13 +1816,13 @@ const App = () => {
   // --- Handlers ---
   const handleLogin = (u: User) => {
     setUser(u);
-    setCurrentPage('dashboard');
+    setCurrentPage('dashboard'); // Redirect to dashboard immediately after login
   };
 
   const handleRegisterComplete = (newUser: User) => {
     setUsers([...users, newUser]);
     setUser(newUser);
-    setCurrentPage('dashboard');
+    setCurrentPage('dashboard'); // Redirect to dashboard after registration
     setRegisterMode(false);
   };
 
@@ -1908,7 +1907,7 @@ const App = () => {
       category: 'Direct Hire',
       type: jobDetails.type,
       applicants: 0,
-      status: 'In Progress',
+      status: 'In Progress', // Assume instant hire for demo
       assignedTo: selectedFreelancer.id
     };
 
@@ -1959,6 +1958,7 @@ const App = () => {
     if(confirm("Are you sure you want to logout?")) {
       setUser(null);
       setCurrentPage('home');
+      // Clearing the specific session key
       localStorage.removeItem('gab_session_v2');
     }
   };
@@ -2089,7 +2089,6 @@ const App = () => {
       case 'chat': return selectedFreelancer && user ? (
         <ChatPage 
           onBack={() => setCurrentPage('public-profile')} 
-          currentUser={user} 
           peerUser={selectedFreelancer} 
         />
       ) : null;
@@ -2128,6 +2127,7 @@ const App = () => {
           />
         ) : <HomePage setPage={setCurrentPage} categories={categories} activeAds={activeAds} jobs={jobs} />;
       
+      // ... (Content pages can remain static as they are informational)
       default: return <HomePage setPage={setCurrentPage} categories={categories} activeAds={activeAds} jobs={jobs} />;
     }
   };
@@ -2476,9 +2476,3 @@ const App = () => {
         <div className="max-w-7xl mx-auto px-6 lg:px-8 mt-12 pt-8 border-t border-slate-800 text-center text-xs opacity-50">
           © 2024 GAB Freelancers Pakistan. All rights reserved.
         </div>
-      </footer>
-    </div>
-  );
-};
-
-export default App;
