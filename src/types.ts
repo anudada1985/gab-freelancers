@@ -16,16 +16,15 @@ export interface PayoutDetails {
 export interface User {
   id: string;
   name: string;
-  email: string; // Added email
-  password?: string; // Added for auth simulation
+  email: string;
+  password?: string;
   avatar: string;
   role: UserRole;
-  verified: boolean; // Simulates NADRA verification
+  verified: boolean;
   balance: number;
   status?: 'Active' | 'Banned';
   agreedToTerms?: boolean;
-  payoutDetails?: PayoutDetails; // For Freelancers to receive money
-  // Freelancer specific fields directly on User for simplicity in this demo
+  payoutDetails?: PayoutDetails;
   title?: string;
   bio?: string;
   hourlyRate?: number;
@@ -43,11 +42,6 @@ export interface PlatformPaymentDetails {
   jazzCashNumber: string;
 }
 
-export interface Skill {
-  name: string;
-  level: 'Beginner' | 'Intermediate' | 'Expert';
-}
-
 export interface Job {
   id: string;
   title: string;
@@ -55,12 +49,27 @@ export interface Job {
   budget: number;
   currency: string;
   postedBy: User;
-  postedAt: string; // ISO Date
+  postedAt: string;
   category: string;
   type: 'Fixed Price' | 'Hourly';
   applicants: number;
   status: 'Open' | 'In Progress' | 'Completed' | 'Paid' | 'Cancelled';
-  assignedTo?: string; // Freelancer ID
+  assignedTo?: string;
+}
+
+// Fiverr-style "Gig"
+export interface Service {
+  id: string;
+  freelancerId: string;
+  freelancer: User;
+  title: string; // e.g., "I will build a React app"
+  description: string;
+  price: number;
+  deliveryTime: number; // in days
+  category: string;
+  image: string;
+  rating: number;
+  reviewsCount: number;
 }
 
 export interface Proposal {
@@ -72,6 +81,19 @@ export interface Proposal {
   bidAmount: number;
   submittedAt: string;
   status: 'Pending' | 'Accepted' | 'Rejected';
+}
+
+// New: Direct Offer from Client to Freelancer
+export interface DirectOffer {
+  id: string;
+  fromClient: User;
+  toFreelancerId: string;
+  title: string;
+  description: string;
+  price: number;
+  days: number;
+  status: 'Pending' | 'Accepted' | 'Rejected';
+  sentAt: string;
 }
 
 export interface FreelancerProfile {
