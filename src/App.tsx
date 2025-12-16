@@ -37,7 +37,8 @@ import {
   UserPlus,
   Camera,
   FileBadge,
-  Star
+  Star,
+  MessageSquare
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -165,6 +166,101 @@ const WalletModal = ({
             }}
           >
             Confirm {type}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const HireModal = ({
+  isOpen,
+  onClose,
+  freelancer,
+  onConfirm
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  freelancer: FreelancerProfile | null;
+  onConfirm: (jobDetails: any) => void;
+}) => {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [budget, setBudget] = useState('');
+  const [jobType, setJobType] = useState('Fixed Price');
+
+  if (!isOpen || !freelancer) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4 backdrop-blur-sm">
+      <div className="bg-white p-6 rounded-xl w-full max-w-md shadow-2xl overflow-y-auto max-h-[90vh]">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-bold flex items-center gap-2">
+            <Briefcase className="text-emerald-600"/> Hire {freelancer.user.name}
+          </h3>
+          <button onClick={onClose}><X size={20} className="text-slate-400"/></button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Job Title</label>
+            <input 
+              type="text" 
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              placeholder="e.g. Need a React Component"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Job Type</label>
+            <select 
+              value={jobType}
+              onChange={(e) => setJobType(e.target.value)}
+              className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="Fixed Price">Fixed Price</option>
+              <option value="Hourly">Hourly Rate</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              {jobType === 'Fixed Price' ? 'Total Budget (PKR)' : 'Hourly Rate (PKR/hr)'}
+            </label>
+            <input 
+              type="number" 
+              value={budget}
+              onChange={(e) => setBudget(e.target.value)}
+              className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              placeholder={jobType === 'Fixed Price' ? "15000" : freelancer.hourlyRate.toString()}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+            <textarea 
+              rows={4}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              placeholder="Describe the work required..."
+            />
+          </div>
+
+          <Button 
+            className="w-full mt-2" 
+            onClick={() => {
+              if (title && budget && description) {
+                onConfirm({ title, type: jobType, budget: Number(budget), description });
+                onClose();
+              } else {
+                alert("Please fill all fields");
+              }
+            }}
+          >
+            Send Offer & Hire
           </Button>
         </div>
       </div>
@@ -595,6 +691,64 @@ const WorkroomPage = ({ onBack, user, onReleaseFunds, job }: { onBack: () => voi
   );
 };
 
+const ChatPage = ({ onBack, currentUser, peerUser }: { onBack: () => void; currentUser: User; peerUser: FreelancerProfile }) => {
+  const [messages, setMessages] = useState([
+    { id: 1, text: `Hi ${peerUser.user.name}, I noticed your profile and I'm interested in your services.`, sender: 'me', time: '10:00 AM' },
+  ]);
+  const [inputText, setInputText] = useState('');
+
+  const handleSend = () => {
+    if (!inputText.trim()) return;
+    setMessages([...messages, { id: Date.now(), text: inputText, sender: 'me', time: 'Just now' }]);
+    setInputText('');
+    
+    // Simulate reply
+    setTimeout(() => {
+      setMessages(prev => [...prev, { id: Date.now() + 1, text: "Thanks for reaching out! I'd love to discuss your project.", sender: 'them', time: 'Just now' }]);
+    }, 1500);
+  };
+
+  return (
+    <div className="h-[calc(100vh-80px)] max-w-4xl mx-auto px-4 py-6 flex flex-col">
+      <div className="bg-white border border-slate-200 rounded-t-xl p-4 flex justify-between items-center shadow-sm">
+        <div className="flex items-center gap-3">
+          <button onClick={onBack} className="text-slate-500 hover:text-slate-800"><ChevronLeft/></button>
+          <img src={peerUser.user.avatar} className="w-10 h-10 rounded-full border border-slate-100" />
+          <div>
+            <h3 className="font-bold text-slate-900">{peerUser.user.name}</h3>
+            <p className="text-xs text-slate-500">{peerUser.title}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 bg-slate-50 border-x border-slate-200 overflow-y-auto p-4 space-y-4">
+        {messages.map(msg => (
+          <div key={msg.id} className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[75%] rounded-xl p-3 shadow-sm ${msg.sender === 'me' ? 'bg-emerald-600 text-white rounded-br-none' : 'bg-white text-slate-800 border border-slate-200 rounded-bl-none'}`}>
+              <p className="text-sm">{msg.text}</p>
+              <p className={`text-[10px] mt-1 text-right ${msg.sender === 'me' ? 'text-emerald-100' : 'text-slate-400'}`}>{msg.time}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-b-xl p-4">
+        <div className="flex gap-2">
+          <input 
+            type="text" 
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            placeholder="Type a message..."
+            className="flex-1 border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:border-emerald-500"
+          />
+          <button onClick={handleSend} className="bg-emerald-600 text-white p-2 rounded-lg hover:bg-emerald-700"><Send size={20}/></button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const FreelancersPage = ({ freelancers, onViewProfile }: { freelancers: FreelancerProfile[], onViewProfile: (p: FreelancerProfile) => void }) => (
   <div className="px-4 lg:px-20 py-8">
      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
@@ -629,7 +783,19 @@ const FreelancersPage = ({ freelancers, onViewProfile }: { freelancers: Freelanc
   </div>
 );
 
-const PublicProfilePage = ({ profile, onBack }: { profile: FreelancerProfile, onBack: () => void }) => {
+const PublicProfilePage = ({ 
+  profile, 
+  onBack, 
+  onHire, 
+  onMessage, 
+  currentUser 
+}: { 
+  profile: FreelancerProfile, 
+  onBack: () => void, 
+  onHire: () => void, 
+  onMessage: () => void,
+  currentUser: User | null
+}) => {
   return (
     <div className="max-w-4xl mx-auto px-6 py-12">
        <button onClick={onBack} className="flex items-center text-slate-500 hover:text-emerald-600 mb-6">
@@ -663,9 +829,16 @@ const PublicProfilePage = ({ profile, onBack }: { profile: FreelancerProfile, on
                    </div>
                 </div>
              </div>
-             <div>
-                <Button className="w-full md:w-auto" onClick={() => alert("To hire this freelancer, browse jobs or contact them directly (Feature coming soon).")}>Hire Now</Button>
-             </div>
+             
+             {/* Action Buttons for Client */}
+             {currentUser?.role === UserRole.CLIENT && (
+               <div className="flex flex-col gap-2 min-w-[140px]">
+                  <Button onClick={onHire} className="w-full">Hire Now</Button>
+                  <Button variant="secondary" onClick={onMessage} className="w-full">
+                    <MessageSquare size={16} /> Message
+                  </Button>
+               </div>
+             )}
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
@@ -1591,6 +1764,7 @@ const App = () => {
   
   // UI State
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+  const [isHireModalOpen, setIsHireModalOpen] = useState(false);
   const [walletModalType, setWalletModalType] = useState<'Deposit' | 'Withdrawal'>('Deposit');
   const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [platformPaymentDetails, setPlatformPaymentDetails] = useState(INITIAL_PLATFORM_PAYMENT);
@@ -1709,6 +1883,42 @@ const App = () => {
     setProposals(proposals.map(p => p.id === proposal.id ? { ...p, status: 'Accepted' } : p));
 
     alert("Hired successfully! Funds moved to Escrow.");
+    setCurrentPage('dashboard');
+  };
+
+  const handleDirectHire = (jobDetails: any) => {
+    if (!user || !selectedFreelancer) return;
+
+    if (user.balance < jobDetails.budget) {
+      alert("Insufficient balance for this offer. Please deposit funds first.");
+      setIsWalletModalOpen(true);
+      setWalletModalType('Deposit');
+      return;
+    }
+
+    // Deduct Funds
+    const updatedClient = { ...user, balance: user.balance - jobDetails.budget };
+    setUsers(users.map(u => u.id === user.id ? updatedClient : u));
+    setUser(updatedClient);
+
+    // Create Job directly assigned
+    const newJob: Job = {
+      id: Date.now().toString(),
+      title: jobDetails.title,
+      description: jobDetails.description,
+      budget: jobDetails.budget,
+      currency: 'PKR',
+      postedBy: user,
+      postedAt: new Date().toISOString(),
+      category: 'Direct Hire',
+      type: jobDetails.type,
+      applicants: 0,
+      status: 'In Progress', // Assume instant hire for demo
+      assignedTo: selectedFreelancer.id
+    };
+
+    setJobs([newJob, ...jobs]);
+    alert(`Offer sent to ${selectedFreelancer.user.name} and funds moved to escrow!`);
     setCurrentPage('dashboard');
   };
 
@@ -1876,7 +2086,17 @@ const App = () => {
       case 'public-profile': return selectedFreelancer ? (
         <PublicProfilePage 
           profile={selectedFreelancer} 
-          onBack={() => setCurrentPage('freelancers')} 
+          onBack={() => setCurrentPage('freelancers')}
+          onHire={() => setIsHireModalOpen(true)}
+          onMessage={() => setCurrentPage('chat')}
+          currentUser={user}
+        />
+      ) : null;
+      case 'chat': return selectedFreelancer && user ? (
+        <ChatPage 
+          onBack={() => setCurrentPage('public-profile')} 
+          currentUser={user} 
+          peerUser={selectedFreelancer} 
         />
       ) : null;
       case 'dashboard': return ProtectedRoute(
@@ -1927,6 +2147,13 @@ const App = () => {
         type={walletModalType} 
         onConfirm={handleWalletAction}
         platformDetails={platformPaymentDetails}
+      />
+
+      <HireModal 
+        isOpen={isHireModalOpen} 
+        onClose={() => setIsHireModalOpen(false)} 
+        freelancer={selectedFreelancer} 
+        onConfirm={handleDirectHire}
       />
 
        {/* Admin Login Modal */}
