@@ -32,12 +32,14 @@ import {
   LogIn,
   UserPlus,
   Star,
-  MessageSquare
+  MessageSquare,
+  Package,
+  Gift
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-import { JobCard, FreelancerCard, Button, VerificationBadge, Badge } from './components/UIComponents';
-import type { Job, FreelancerProfile, User, Transaction, Advertisement, PayoutDetails, PlatformPaymentDetails, Proposal } from './types';
+import { JobCard, FreelancerCard, Button, VerificationBadge, Badge, ServiceCard } from './components/UIComponents';
+import type { Job, FreelancerProfile, User, Transaction, Advertisement, PayoutDetails, PlatformPaymentDetails, Proposal, Service, DirectOffer } from './types';
 import { UserRole } from './types';
 import { generateJobDescription } from './services/geminiService';
 import { AuthPage, RegisterPage } from './auth/Enhanced_Auth_Registration';
@@ -264,7 +266,7 @@ const HireModal = ({
 
 // --- Pages ---
 
-const HomePage = ({ setPage, categories, activeAds, jobs }: { setPage: (p: string) => void, categories: string[], activeAds: Advertisement[], jobs: Job[] }) => (
+const HomePage = ({ setPage, categories, activeAds, jobs, services }: { setPage: (p: string) => void, categories: string[], activeAds: Advertisement[], jobs: Job[], services: Service[] }) => (
   <div className="space-y-16 pb-12">
     {/* Admin Ads Section */}
     {activeAds.length > 0 && (
@@ -293,15 +295,30 @@ const HomePage = ({ setPage, categories, activeAds, jobs }: { setPage: (p: strin
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
           <Button onClick={() => setPage('jobs')} className="h-12 text-lg px-8 shadow-lg shadow-emerald-900/50">Find Work</Button>
-          <Button onClick={() => setPage('freelancers')} variant="secondary" className="h-12 text-lg px-8">Hire Talent</Button>
+          <Button onClick={() => setPage('services')} variant="secondary" className="h-12 text-lg px-8">Browse Services</Button>
         </div>
       </div>
     </section>
 
+    {/* Featured Services (Gigs) */}
+    {services.length > 0 && (
+      <section className="px-6 lg:px-20">
+        <div className="flex justify-between items-end mb-8">
+          <h2 className="text-2xl font-bold text-slate-900">Popular Services</h2>
+          <button onClick={() => setPage('services')} className="text-emerald-600 font-medium hover:underline">View All</button>
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {services.slice(0, 4).map(service => (
+            <ServiceCard key={service.id} service={service} onClick={() => setPage('services')} />
+          ))}
+        </div>
+      </section>
+    )}
+
     {/* Categories */}
     <section className="px-6 lg:px-20">
       <div className="flex justify-between items-end mb-8">
-        <h2 className="text-2xl font-bold text-slate-900">Popular Categories</h2>
+        <h2 className="text-2xl font-bold text-slate-900">Browse by Category</h2>
         <button onClick={() => setPage('jobs')} className="text-emerald-600 font-medium hover:underline">View All</button>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -322,8 +339,8 @@ const HomePage = ({ setPage, categories, activeAds, jobs }: { setPage: (p: strin
         <div className="max-w-7xl mx-auto px-6 lg:px-20">
           <div className="flex justify-between items-end mb-8">
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">Featured Jobs</h2>
-              <p className="text-slate-600">Top opportunities for you today</p>
+              <h2 className="text-2xl font-bold text-slate-900">Latest Jobs</h2>
+              <p className="text-slate-600">Fresh opportunities posted recently</p>
             </div>
             <button onClick={() => setPage('jobs')} className="text-emerald-600 font-medium hover:underline">View All</button>
           </div>
@@ -335,6 +352,35 @@ const HomePage = ({ setPage, categories, activeAds, jobs }: { setPage: (p: strin
         </div>
       </section>
     )}
+  </div>
+);
+
+const ServicesPage = ({ services, onSelectService }: { services: Service[], onSelectService: (s: Service) => void }) => (
+  <div className="px-4 lg:px-20 py-8">
+    <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+      <h1 className="text-2xl font-bold">Browse Professional Services</h1>
+      <div className="relative w-full md:w-96">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+        <input 
+          type="text" 
+          placeholder="What are you looking for?" 
+          className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+        />
+      </div>
+    </div>
+    
+    <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {services.length === 0 ? (
+        <div className="col-span-full text-center py-20">
+          <Package className="mx-auto text-slate-300 mb-4" size={48} />
+          <h3 className="text-lg font-bold text-slate-600">No Services Found</h3>
+        </div>
+      ) : (
+        services.map(service => (
+          <ServiceCard key={service.id} service={service} onClick={() => onSelectService(service)} />
+        ))
+      )}
+    </div>
   </div>
 );
 
@@ -392,7 +438,8 @@ const JobDetailsPage = ({
   user, 
   onApply,
   proposals,
-  onHire 
+  onHire,
+  onMessage
 }: { 
   job: Job; 
   onBack: () => void; 
@@ -400,6 +447,7 @@ const JobDetailsPage = ({
   onApply: (jobId: string, bid: number, cover: string) => void;
   proposals: Proposal[];
   onHire: (proposal: Proposal) => void;
+  onMessage: (freelancerId: string, name: string) => void;
 }) => {
   const [showProposalForm, setShowProposalForm] = useState(false);
   const [bidAmount, setBidAmount] = useState(job.budget.toString());
@@ -478,16 +526,25 @@ const JobDetailsPage = ({
                         <div className="text-right">
                           <span className="font-bold text-emerald-600 block">PKR {p.bidAmount.toLocaleString()}</span>
                           {p.status === 'Pending' && job.status === 'Open' && (
-                            <Button 
-                              className="mt-2 text-xs py-1 px-3" 
-                              onClick={() => {
-                                if(confirm("Are you sure you want to hire this freelancer? Funds will be moved to Escrow.")) {
-                                  onHire(p);
-                                }
-                              }}
-                            >
-                              Hire Now
-                            </Button>
+                            <div className="flex gap-2 mt-2 justify-end">
+                              <Button 
+                                variant="secondary"
+                                className="text-xs py-1 px-3 h-8"
+                                onClick={() => onMessage(p.freelancerId, p.freelancerName)}
+                              >
+                                Message
+                              </Button>
+                              <Button 
+                                className="text-xs py-1 px-3 h-8" 
+                                onClick={() => {
+                                  if(confirm("Are you sure you want to hire this freelancer? Funds will be moved to Escrow.")) {
+                                    onHire(p);
+                                  }
+                                }}
+                              >
+                                Hire Now
+                              </Button>
+                            </div>
                           )}
                           {p.status === 'Accepted' && <Badge color="emerald">Hired</Badge>}
                         </div>
@@ -685,9 +742,9 @@ const WorkroomPage = ({ onBack, user, onReleaseFunds, job }: { onBack: () => voi
   );
 };
 
-const ChatPage = ({ onBack, peerUser }: { onBack: () => void; peerUser: FreelancerProfile }) => {
+const ChatPage = ({ onBack, peerName, context }: { onBack: () => void; peerName: string; context?: string }) => {
   const [messages, setMessages] = useState([
-    { id: 1, text: `Hi ${peerUser.user.name}, I noticed your profile and I'm interested in your services.`, sender: 'me', time: '10:00 AM' },
+    { id: 1, text: `Hi ${peerName}, I noticed your profile/gig and I'm interested in working with you.`, sender: 'me', time: '10:00 AM' },
   ]);
   const [inputText, setInputText] = useState('');
 
@@ -698,7 +755,7 @@ const ChatPage = ({ onBack, peerUser }: { onBack: () => void; peerUser: Freelanc
     
     // Simulate reply
     setTimeout(() => {
-      setMessages(prev => [...prev, { id: Date.now() + 1, text: "Thanks for reaching out! I'd love to discuss your project.", sender: 'them', time: 'Just now' }]);
+      setMessages(prev => [...prev, { id: Date.now() + 1, text: "Thanks for reaching out! I'd love to discuss the details.", sender: 'them', time: 'Just now' }]);
     }, 1500);
   };
 
@@ -707,10 +764,9 @@ const ChatPage = ({ onBack, peerUser }: { onBack: () => void; peerUser: Freelanc
       <div className="bg-white border border-slate-200 rounded-t-xl p-4 flex justify-between items-center shadow-sm">
         <div className="flex items-center gap-3">
           <button onClick={onBack} className="text-slate-500 hover:text-slate-800"><ChevronLeft/></button>
-          <img src={peerUser.user.avatar} className="w-10 h-10 rounded-full border border-slate-100" />
           <div>
-            <h3 className="font-bold text-slate-900">{peerUser.user.name}</h3>
-            <p className="text-xs text-slate-500">{peerUser.title}</p>
+            <h3 className="font-bold text-slate-900">{peerName}</h3>
+            {context && <p className="text-xs text-emerald-600 font-medium">{context}</p>}
           </div>
         </div>
       </div>
@@ -737,6 +793,80 @@ const ChatPage = ({ onBack, peerUser }: { onBack: () => void; peerUser: Freelanc
             className="flex-1 border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:border-emerald-500"
           />
           <button onClick={handleSend} className="bg-emerald-600 text-white p-2 rounded-lg hover:bg-emerald-700"><Send size={20}/></button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CreateServicePage = ({ user, categories, onSave, onBack }: { user: User; categories: string[]; onSave: (service: Service) => void; onBack: () => void }) => {
+  const [title, setTitle] = useState('');
+  const [desc, setDesc] = useState('');
+  const [price, setPrice] = useState('');
+  const [category, setCategory] = useState(categories[0]);
+  const [days, setDays] = useState('3');
+
+  const handleSave = () => {
+    if(!title || !desc || !price) {
+      alert("Please fill all fields");
+      return;
+    }
+    const newService: Service = {
+      id: Date.now().toString(),
+      freelancerId: user.id,
+      freelancer: user,
+      title,
+      description: desc,
+      price: Number(price),
+      deliveryTime: Number(days),
+      category,
+      image: 'https://images.unsplash.com/photo-1587614382346-4ec70e388b28?auto=format&fit=crop&q=80&w=400', // Mock image
+      rating: 0,
+      reviewsCount: 0
+    };
+    onSave(newService);
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <button onClick={onBack} className="flex items-center text-slate-500 hover:text-emerald-600 mb-6">
+        <ChevronLeft size={18} className="mr-1" /> Back
+      </button>
+      <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+        <h1 className="text-2xl font-bold mb-6">Create a New Service (Gig)</h1>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Gig Title</label>
+            <div className="flex items-center border border-slate-300 rounded-lg overflow-hidden">
+              <span className="pl-3 text-slate-500 bg-slate-50 h-full py-2 border-r text-sm">I will</span>
+              <input 
+                value={title} onChange={(e) => setTitle(e.target.value)} 
+                className="flex-1 p-2 focus:outline-none" 
+                placeholder="design a professional logo for you"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+              <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full p-2 border border-slate-300 rounded-lg">
+                {categories.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Delivery Time (Days)</label>
+              <input type="number" value={days} onChange={(e) => setDays(e.target.value)} className="w-full p-2 border border-slate-300 rounded-lg" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Price (PKR)</label>
+            <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} className="w-full p-2 border border-slate-300 rounded-lg" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+            <textarea rows={5} value={desc} onChange={(e) => setDesc(e.target.value)} className="w-full p-2 border border-slate-300 rounded-lg" placeholder="Describe what you offer..." />
+          </div>
+          <Button onClick={handleSave} className="w-full mt-4">Publish Gig</Button>
         </div>
       </div>
     </div>
@@ -782,101 +912,219 @@ const PublicProfilePage = ({
   onBack, 
   onHire, 
   onMessage, 
-  currentUser 
+  currentUser,
+  services,
+  onViewService
 }: { 
   profile: FreelancerProfile, 
   onBack: () => void, 
   onHire: () => void, 
   onMessage: () => void,
-  currentUser: User | null
+  currentUser: User | null,
+  services: Service[],
+  onViewService: (s: Service) => void
 }) => {
   return (
     <div className="max-w-4xl mx-auto px-6 py-12">
        <button onClick={onBack} className="flex items-center text-slate-500 hover:text-emerald-600 mb-6">
         <ChevronLeft size={18} className="mr-1" /> Back to Freelancers
       </button>
-       <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row gap-6 items-start border-b border-slate-100 pb-8 mb-8">
-             <img src={profile.user.avatar} className="w-32 h-32 rounded-full border-4 border-slate-50 shadow-sm" alt="Profile" />
-             <div className="flex-1">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h1 className="text-2xl font-bold text-slate-900">{profile.user.name}</h1>
-                    <p className="text-emerald-600 font-medium text-lg">{profile.title}</p>
+       <div className="space-y-8">
+         <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row gap-6 items-start border-b border-slate-100 pb-8 mb-8">
+               <img src={profile.user.avatar} className="w-32 h-32 rounded-full border-4 border-slate-50 shadow-sm" alt="Profile" />
+               <div className="flex-1">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h1 className="text-2xl font-bold text-slate-900">{profile.user.name}</h1>
+                      <p className="text-emerald-600 font-medium text-lg">{profile.title}</p>
+                    </div>
+                    {profile.user.verified && <VerificationBadge />}
                   </div>
-                  {profile.user.verified && <VerificationBadge />}
-                </div>
-                
-                <div className="flex gap-4 mt-4 text-sm text-slate-500">
-                   <div className="flex items-center gap-1">
-                      <Star size={16} className="text-yellow-500" fill="currentColor"/>
-                      <span className="font-bold text-slate-900">{profile.rating}</span>
-                   </div>
-                   <div className="flex items-center gap-1">
-                      <Briefcase size={16} />
-                      <span>{profile.jobsCompleted} Jobs Completed</span>
-                   </div>
-                   <div className="flex items-center gap-1">
-                      <Clock size={16} />
-                      <span>PKR {profile.hourlyRate}/hr</span>
-                   </div>
-                </div>
-             </div>
-             
-             {/* Action Buttons for Client */}
-             {currentUser?.role === UserRole.CLIENT && (
-               <div className="flex flex-col gap-2 min-w-[140px]">
-                  <Button onClick={onHire} className="w-full">Hire Now</Button>
-                  <Button variant="secondary" onClick={onMessage} className="w-full">
-                    <MessageSquare size={16} /> Message
-                  </Button>
+                  
+                  <div className="flex gap-4 mt-4 text-sm text-slate-500">
+                     <div className="flex items-center gap-1">
+                        <Star size={16} className="text-yellow-500" fill="currentColor"/>
+                        <span className="font-bold text-slate-900">{profile.rating}</span>
+                     </div>
+                     <div className="flex items-center gap-1">
+                        <Briefcase size={16} />
+                        <span>{profile.jobsCompleted} Jobs Completed</span>
+                     </div>
+                     <div className="flex items-center gap-1">
+                        <Clock size={16} />
+                        <span>PKR {profile.hourlyRate}/hr</span>
+                     </div>
+                  </div>
                </div>
-             )}
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-             <div className="md:col-span-2 space-y-6">
-                <section>
-                   <h3 className="font-bold text-lg mb-3">About</h3>
-                   <p className="text-slate-600 leading-relaxed">{profile.bio}</p>
-                </section>
-                <section>
-                   <h3 className="font-bold text-lg mb-3">Skills</h3>
-                   <div className="flex flex-wrap gap-2">
-                      {profile.skills.map(skill => (
-                        <span key={skill} className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm font-medium">
-                           {skill}
-                        </span>
-                      ))}
-                   </div>
-                </section>
-             </div>
-             <div className="space-y-6">
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                   <h4 className="font-bold mb-2 text-sm text-slate-500 uppercase">Total Earned</h4>
-                   <p className="text-xl font-bold text-emerald-600">PKR {profile.totalEarned.toLocaleString()}</p>
-                </div>
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                   <h4 className="font-bold mb-2 text-sm text-slate-500 uppercase">Verification</h4>
-                   <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm text-slate-700">
-                         <CheckCircle2 size={16} className="text-emerald-500"/> Email Verified
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-slate-700">
-                         <CheckCircle2 size={16} className="text-emerald-500"/> NADRA ID Verified
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-slate-700">
-                         <CheckCircle2 size={16} className="text-emerald-500"/> Payment Verified
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </div>
+               
+               {/* Action Buttons for Client */}
+               {currentUser?.role === UserRole.CLIENT && (
+                 <div className="flex flex-col gap-2 min-w-[140px]">
+                    <Button onClick={onHire} className="w-full">Direct Offer</Button>
+                    <Button variant="secondary" onClick={onMessage} className="w-full">
+                      <MessageSquare size={16} /> Message
+                    </Button>
+                 </div>
+               )}
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+               <div className="md:col-span-2 space-y-6">
+                  <section>
+                     <h3 className="font-bold text-lg mb-3">About</h3>
+                     <p className="text-slate-600 leading-relaxed">{profile.bio}</p>
+                  </section>
+                  <section>
+                     <h3 className="font-bold text-lg mb-3">Skills</h3>
+                     <div className="flex flex-wrap gap-2">
+                        {profile.skills.map(skill => (
+                          <span key={skill} className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm font-medium">
+                             {skill}
+                          </span>
+                        ))}
+                     </div>
+                  </section>
+               </div>
+               <div className="space-y-6">
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                     <h4 className="font-bold mb-2 text-sm text-slate-500 uppercase">Total Earned</h4>
+                     <p className="text-xl font-bold text-emerald-600">PKR {profile.totalEarned.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                     <h4 className="font-bold mb-2 text-sm text-slate-500 uppercase">Verification</h4>
+                     <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm text-slate-700">
+                           <CheckCircle2 size={16} className="text-emerald-500"/> Email Verified
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-slate-700">
+                           <CheckCircle2 size={16} className="text-emerald-500"/> NADRA ID Verified
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-slate-700">
+                           <CheckCircle2 size={16} className="text-emerald-500"/> Payment Verified
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+
+         {/* Services / Gigs Section */}
+         <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+            <h3 className="font-bold text-xl mb-6">Services by {profile.user.name}</h3>
+            <div className="grid md:grid-cols-2 gap-4">
+               {services.length > 0 ? services.map(s => (
+                 <ServiceCard key={s.id} service={s} onClick={() => onViewService(s)} />
+               )) : <p className="text-slate-500 italic">No active services.</p>}
+            </div>
+         </div>
        </div>
     </div>
   )
 }
+
+const ProfilePage = ({ user, onSave, onBack }: { user: User, onSave: (u: User) => void, onBack: () => void }) => {
+  const [formData, setFormData] = useState({
+    name: user.name,
+    title: user.title || '',
+    bio: user.bio || '',
+    hourlyRate: user.hourlyRate || 0,
+    skills: user.skills?.join(', ') || ''
+  });
+
+  const handleSave = () => {
+    const updatedUser = {
+      ...user,
+      name: formData.name,
+      title: formData.title,
+      bio: formData.bio,
+      hourlyRate: Number(formData.hourlyRate),
+      skills: formData.skills.split(',').map(s => s.trim()).filter(Boolean)
+    };
+    onSave(updatedUser);
+    onBack();
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <button onClick={onBack} className="flex items-center text-slate-500 hover:text-emerald-600 mb-6">
+        <ChevronLeft size={18} className="mr-1" /> Back to Dashboard
+      </button>
+      
+      <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
+        <h1 className="text-2xl font-bold mb-6">Edit Profile</h1>
+        
+        <div className="flex items-center gap-6 mb-8">
+          <img src={user.avatar} alt="Profile" className="w-24 h-24 rounded-full border-4 border-slate-50" />
+          <div>
+            <h2 className="text-xl font-bold">{user.name}</h2>
+            <p className="text-slate-500">{user.email}</p>
+            {user.verified && <VerificationBadge />}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+            <input 
+              value={formData.name}
+              onChange={e => setFormData({...formData, name: e.target.value})}
+              className="w-full p-2 border border-slate-300 rounded-lg"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Professional Title</label>
+            <input 
+              value={formData.title}
+              onChange={e => setFormData({...formData, title: e.target.value})}
+              placeholder="e.g. Senior React Developer"
+              className="w-full p-2 border border-slate-300 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Bio</label>
+            <textarea 
+              rows={4}
+              value={formData.bio}
+              onChange={e => setFormData({...formData, bio: e.target.value})}
+              placeholder="Tell us about your experience..."
+              className="w-full p-2 border border-slate-300 rounded-lg"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Hourly Rate (PKR)</label>
+              <input 
+                type="number"
+                value={formData.hourlyRate}
+                onChange={e => setFormData({...formData, hourlyRate: Number(e.target.value)})}
+                className="w-full p-2 border border-slate-300 rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Skills (comma separated)</label>
+              <input 
+                value={formData.skills}
+                onChange={e => setFormData({...formData, skills: e.target.value})}
+                placeholder="React, Node.js, Design..."
+                className="w-full p-2 border border-slate-300 rounded-lg"
+              />
+            </div>
+          </div>
+
+          <div className="pt-4 flex gap-4">
+             <Button onClick={handleSave}>Save Changes</Button>
+             <Button variant="ghost" onClick={onBack}>Cancel</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const PostJobPage = ({ onPost, categories, user }: { onPost: (job: Job) => void, categories: string[], user: User }) => {
   const [title, setTitle] = useState('');
@@ -884,7 +1132,6 @@ const PostJobPage = ({ onPost, categories, user }: { onPost: (job: Job) => void,
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState(categories[0]);
   const [budget, setBudget] = useState('');
-  const [jobType, setJobType] = useState<'Fixed Price' | 'Hourly'>('Fixed Price');
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = async () => {
@@ -913,7 +1160,7 @@ const PostJobPage = ({ onPost, categories, user }: { onPost: (job: Job) => void,
       postedBy: user,
       postedAt: new Date().toISOString(),
       category,
-      type: jobType,
+      type: 'Fixed Price',
       applicants: 0,
       status: 'Open'
     };
@@ -948,40 +1195,26 @@ const PostJobPage = ({ onPost, categories, user }: { onPost: (job: Job) => void,
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Job Type</label>
-            <select 
-              value={jobType}
-              onChange={(e) => setJobType(e.target.value as 'Fixed Price' | 'Hourly')}
+            <label className="block text-sm font-medium text-slate-700 mb-1">Required Skills</label>
+            <input 
+              type="text" 
+              value={skills}
+              onChange={(e) => setSkills(e.target.value)}
               className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-            >
-              <option value="Fixed Price">Fixed Price</option>
-              <option value="Hourly">Hourly Rate</option>
-            </select>
+              placeholder="e.g. FBR, Tax Law"
+            />
           </div>
         </div>
         
         <div>
-           <label className="block text-sm font-medium text-slate-700 mb-1">
-             {jobType === 'Fixed Price' ? 'Total Budget (PKR)' : 'Hourly Rate (PKR/hr)'}
-           </label>
+           <label className="block text-sm font-medium text-slate-700 mb-1">Budget (PKR)</label>
            <input 
              type="number" 
              value={budget}
              onChange={(e) => setBudget(e.target.value)}
              className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-             placeholder={jobType === 'Fixed Price' ? "15000" : "2500"}
+             placeholder="15000"
            />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Required Skills</label>
-          <input 
-            type="text" 
-            value={skills}
-            onChange={(e) => setSkills(e.target.value)}
-            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-            placeholder="e.g. FBR, Tax Law"
-          />
         </div>
 
         <div>
@@ -1013,99 +1246,6 @@ const PostJobPage = ({ onPost, categories, user }: { onPost: (job: Job) => void,
   );
 };
 
-const ProfilePage = ({ user, onSave, onBack }: { user: User, onSave: (u: User) => void, onBack: () => void }) => {
-  const [formData, setFormData] = useState(user);
-  
-  const handleSave = () => {
-    onSave(formData);
-    alert('Profile updated successfully!');
-  };
-
-  return (
-    <div className="max-w-4xl mx-auto px-6 py-12">
-      <button onClick={onBack} className="flex items-center text-slate-500 hover:text-emerald-600 mb-6">
-        <ChevronLeft size={18} className="mr-1" /> Back to Dashboard
-      </button>
-      
-      <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-        <h1 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-          <UserCircle size={24} className="text-emerald-600"/> Edit Profile
-        </h1>
-        
-        <div className="space-y-6">
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-              <input 
-                value={formData.name} 
-                onChange={e => setFormData({...formData, name: e.target.value})}
-                className="w-full p-3 border border-slate-300 rounded-lg"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Email (Read Only)</label>
-              <input 
-                value={formData.email} 
-                disabled
-                className="w-full p-3 border border-slate-300 rounded-lg bg-slate-50 text-slate-500"
-              />
-            </div>
-          </div>
-
-          {user.role === UserRole.FREELANCER && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Professional Title</label>
-                <input 
-                  value={formData.title || ''} 
-                  onChange={e => setFormData({...formData, title: e.target.value})}
-                  className="w-full p-3 border border-slate-300 rounded-lg"
-                  placeholder="e.g. Senior React Developer"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Bio</label>
-                <textarea 
-                  rows={4}
-                  value={formData.bio || ''} 
-                  onChange={e => setFormData({...formData, bio: e.target.value})}
-                  className="w-full p-3 border border-slate-300 rounded-lg"
-                  placeholder="Tell clients about yourself..."
-                />
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Hourly Rate (PKR)</label>
-                  <input 
-                    type="number"
-                    value={formData.hourlyRate || ''} 
-                    onChange={e => setFormData({...formData, hourlyRate: Number(e.target.value)})}
-                    className="w-full p-3 border border-slate-300 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Skills (Comma separated)</label>
-                  <input 
-                    value={formData.skills?.join(', ') || ''} 
-                    onChange={e => setFormData({...formData, skills: e.target.value.split(',').map(s => s.trim())})}
-                    className="w-full p-3 border border-slate-300 rounded-lg"
-                  />
-                </div>
-              </div>
-            </>
-          )}
-
-          <div className="pt-4 flex gap-4">
-            <Button onClick={handleSave} className="px-8"><Save size={18}/> Save Changes</Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const DashboardPage = ({ 
   user, 
   onEnterWorkroom, 
@@ -1114,7 +1254,11 @@ const DashboardPage = ({
   onDeposit,
   onWithdraw,
   jobs,
-  proposals
+  proposals,
+  services,
+  onCreateService,
+  directOffers,
+  onRespondToOffer
 }: { 
   user: User; 
   onEnterWorkroom: (job: Job) => void, 
@@ -1123,15 +1267,16 @@ const DashboardPage = ({
   onDeposit: () => void,
   onWithdraw: () => void,
   jobs: Job[],
-  proposals: Proposal[]
+  proposals: Proposal[],
+  services: Service[],
+  onCreateService: () => void,
+  directOffers: DirectOffer[],
+  onRespondToOffer: (offerId: string, accepted: boolean) => void
 }) => {
   // Logic to calculate chart data from transactions (since mock data is gone)
   const calculateEarnings = () => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-    // In a real app, parse transaction dates. For demo, we'll return empty or simple aggregation
     if (transactions.length === 0) return months.map(m => ({ name: m, amount: 0 }));
-    
-    // Very simple mock aggregation just to show something if tx exist
     return months.map(m => ({ name: m, amount: transactions.filter(t => t.type === 'Payment').reduce((acc, curr) => acc + (curr.amount/10), 0) }));
   };
 
@@ -1221,6 +1366,40 @@ const DashboardPage = ({
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           
+          {/* Incoming Direct Offers (Freelancer View) */}
+          {user.role === UserRole.FREELANCER && (
+            <div className="bg-white p-6 rounded-xl border border-purple-200 shadow-sm bg-purple-50/30">
+              <h3 className="font-bold mb-4 flex items-center gap-2 text-purple-900">
+                <Gift size={18} /> Direct Offers
+              </h3>
+              {directOffers.filter(o => o.status === 'Pending').length === 0 ? (
+                <p className="text-slate-500 text-sm italic">No pending offers.</p>
+              ) : (
+                <div className="space-y-3">
+                  {directOffers.filter(o => o.status === 'Pending').map(offer => (
+                    <div key={offer.id} className="bg-white p-4 rounded-lg border border-purple-100 shadow-sm">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-bold text-slate-900">{offer.title}</h4>
+                          <p className="text-xs text-slate-500">From: {offer.fromClient.name}</p>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-bold text-purple-600 block">PKR {offer.price}</span>
+                          <span className="text-xs text-slate-400">{offer.days} days</span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-slate-600 my-2 bg-slate-50 p-2 rounded">{offer.description}</p>
+                      <div className="flex gap-2 justify-end">
+                        <Button variant="ghost" className="text-xs h-8 text-red-600" onClick={() => onRespondToOffer(offer.id, false)}>Decline</Button>
+                        <Button className="text-xs h-8 bg-purple-600 hover:bg-purple-700" onClick={() => onRespondToOffer(offer.id, true)}>Accept & Start</Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Active Contracts / Workroom CTA */}
           <div className="bg-white p-6 rounded-xl border border-emerald-100 shadow-sm ring-1 ring-emerald-50">
             <h3 className="font-bold mb-4 flex items-center gap-2"><Briefcase size={18} className="text-emerald-600"/> Active Contracts</h3>
@@ -1237,6 +1416,31 @@ const DashboardPage = ({
               <p className="text-slate-500 text-sm italic">No active contracts found. Start hiring or applying!</p>
             )}
           </div>
+
+          {/* My Services (Freelancer View) */}
+          {user.role === UserRole.FREELANCER && (
+            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold flex items-center gap-2"><Package size={18} /> My Gigs</h3>
+                <Button variant="outline" className="text-xs h-8" onClick={onCreateService}>
+                  <PlusCircle size={14} /> Create Gig
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {services.map(s => (
+                  <div key={s.id} className="border p-3 rounded-lg flex gap-3 bg-slate-50">
+                    <img src={s.image} className="w-16 h-16 rounded object-cover" />
+                    <div>
+                      <h4 className="font-bold text-sm line-clamp-1">{s.title}</h4>
+                      <p className="text-xs text-slate-500">PKR {s.price}</p>
+                      <p className="text-xs text-emerald-600 font-medium">{s.reviewsCount} Sales</p>
+                    </div>
+                  </div>
+                ))}
+                {services.length === 0 && <p className="text-slate-500 text-sm italic col-span-2">You haven't posted any gigs yet.</p>}
+              </div>
+            </div>
+          )}
 
           {/* My Proposals Section (Freelancer Only) */}
           {user.role === UserRole.FREELANCER && (
@@ -1715,43 +1919,52 @@ const AdminPage = ({
 
 const App = () => {
   const [currentPage, setCurrentPage] = useState('home'); 
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(null); // Initialized to null for login flow
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [selectedFreelancer, setSelectedFreelancer] = useState<FreelancerProfile | null>(null);
+  const [chatPeer, setChatPeer] = useState<{id: string, name: string, context?: string} | null>(null);
   
-  // Data State - Persistence
+  // Data State - Persistence - Uses 'v3' keys to invalidate old cache for new schema
   const [users, setUsers] = useState<User[]>(() => {
-    const saved = localStorage.getItem('gab_users_v2');
+    const saved = localStorage.getItem('gab_users_v3');
     return saved ? JSON.parse(saved) : [];
   });
   const [jobs, setJobs] = useState<Job[]>(() => {
-    const saved = localStorage.getItem('gab_jobs_v2');
+    const saved = localStorage.getItem('gab_jobs_v3');
     return saved ? JSON.parse(saved) : [];
   });
   const [proposals, setProposals] = useState<Proposal[]>(() => {
-    const saved = localStorage.getItem('gab_proposals_v2');
+    const saved = localStorage.getItem('gab_proposals_v3');
     return saved ? JSON.parse(saved) : [];
   });
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
-    const saved = localStorage.getItem('gab_transactions_v2');
+    const saved = localStorage.getItem('gab_transactions_v3');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [services, setServices] = useState<Service[]>(() => {
+    const saved = localStorage.getItem('gab_services_v3');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [directOffers, setDirectOffers] = useState<DirectOffer[]>(() => {
+    const saved = localStorage.getItem('gab_offers_v3');
     return saved ? JSON.parse(saved) : [];
   });
   
-  // Derived State for Freelancers (Only users with FREELANCER role)
-  const freelancers: FreelancerProfile[] = users
-    .filter(u => u.role === UserRole.FREELANCER)
-    .map(u => ({
-      id: u.id,
-      user: u,
-      title: u.title || 'Freelancer',
-      bio: u.bio || 'No bio available.',
-      hourlyRate: u.hourlyRate || 0,
-      skills: u.skills || [],
-      rating: u.rating || 0,
-      jobsCompleted: u.jobsCompleted || 0,
-      totalEarned: 0 // Mock calculation could go here
-    }));
+  // Derived State
+  const freelancers: FreelancerProfile[] = users.length > 0 
+    ? users.filter(u => u.role === UserRole.FREELANCER).map(u => ({
+        id: u.id,
+        user: u,
+        title: u.title || '',
+        bio: u.bio || '',
+        hourlyRate: u.hourlyRate || 0,
+        skills: u.skills || [],
+        rating: u.rating || 0,
+        jobsCompleted: u.jobsCompleted || 0,
+        totalEarned: 0
+      }))
+    : [];
 
   const [activeWorkroomJob, setActiveWorkroomJob] = useState<Job | undefined>(undefined);
   const [activeAds, setActiveAds] = useState<Advertisement[]>([]);
@@ -1783,41 +1996,47 @@ const App = () => {
     accountNumber: ''
   });
 
-  // Persistence Effects - using v2 keys
-  useEffect(() => { localStorage.setItem('gab_users_v2', JSON.stringify(users)); }, [users]);
-  useEffect(() => { localStorage.setItem('gab_jobs_v2', JSON.stringify(jobs)); }, [jobs]);
-  useEffect(() => { localStorage.setItem('gab_proposals_v2', JSON.stringify(proposals)); }, [proposals]);
-  useEffect(() => { localStorage.setItem('gab_transactions_v2', JSON.stringify(transactions)); }, [transactions]);
+  // Persistence Effects - using v3 keys
+  useEffect(() => { localStorage.setItem('gab_users_v3', JSON.stringify(users)); }, [users]);
+  useEffect(() => { localStorage.setItem('gab_jobs_v3', JSON.stringify(jobs)); }, [jobs]);
+  useEffect(() => { localStorage.setItem('gab_proposals_v3', JSON.stringify(proposals)); }, [proposals]);
+  useEffect(() => { localStorage.setItem('gab_transactions_v3', JSON.stringify(transactions)); }, [transactions]);
+  useEffect(() => { localStorage.setItem('gab_services_v3', JSON.stringify(services)); }, [services]);
+  useEffect(() => { localStorage.setItem('gab_offers_v3', JSON.stringify(directOffers)); }, [directOffers]);
 
   // Load active user session on mount
   useEffect(() => {
-    const savedUser = localStorage.getItem('gab_session_v2');
+    // Note: Changed key to 'gab_session_v3' to invalidate old session
+    const savedUser = localStorage.getItem('gab_session_v3');
     if (savedUser) {
       const parsedUser = JSON.parse(savedUser);
+      // Try to find the user in the latest users list, fallback to parsedUser
       const freshUser = users.find(u => u.id === parsedUser.id) || parsedUser;
       setUser(freshUser);
+    } else {
+      localStorage.removeItem('gab_active_user'); 
     }
   }, []); 
 
   // Sync user state to local storage for persistence
   useEffect(() => {
     if (user) {
-      localStorage.setItem('gab_session_v2', JSON.stringify(user));
+      localStorage.setItem('gab_session_v3', JSON.stringify(user));
     } else {
-      localStorage.removeItem('gab_session_v2');
+      localStorage.removeItem('gab_session_v3');
     }
   }, [user]);
 
   // --- Handlers ---
   const handleLogin = (u: User) => {
     setUser(u);
-    setCurrentPage('dashboard');
+    setCurrentPage('dashboard'); // Redirect to dashboard immediately after login
   };
 
   const handleRegisterComplete = (newUser: User) => {
     setUsers([...users, newUser]);
     setUser(newUser);
-    setCurrentPage('dashboard');
+    setCurrentPage('dashboard'); // Redirect to dashboard after registration
     setRegisterMode(false);
   };
 
@@ -1890,26 +2109,58 @@ const App = () => {
     setUsers(users.map(u => u.id === user.id ? updatedClient : u));
     setUser(updatedClient);
 
-    // Create Job directly assigned
-    const newJob: Job = {
+    // Create Direct Offer
+    const newOffer: DirectOffer = {
       id: Date.now().toString(),
+      fromClient: user,
+      toFreelancerId: selectedFreelancer.id,
       title: jobDetails.title,
       description: jobDetails.description,
-      budget: jobDetails.budget,
-      currency: 'PKR',
-      postedBy: user,
-      postedAt: new Date().toISOString(),
-      category: 'Direct Hire',
-      type: jobDetails.type,
-      applicants: 0,
-      status: 'In Progress',
-      assignedTo: selectedFreelancer.id
+      price: jobDetails.budget,
+      days: 3, // Default for now
+      status: 'Pending',
+      sentAt: new Date().toISOString()
     };
 
-    setJobs([newJob, ...jobs]);
-    alert(`Offer sent to ${selectedFreelancer.user.name} and funds moved to escrow!`);
+    setDirectOffers([...directOffers, newOffer]);
+    alert(`Offer sent to ${selectedFreelancer.user.name}!`);
     setCurrentPage('dashboard');
   };
+
+  const handleCreateService = (service: Service) => {
+    setServices([...services, service]);
+    alert("Service created successfully!");
+    setCurrentPage('dashboard');
+  }
+
+  const handleRespondToOffer = (offerId: string, accepted: boolean) => {
+    if (accepted) {
+      const offer = directOffers.find(o => o.id === offerId);
+      if(!offer) return;
+      
+      // Create a job from the offer
+      const newJob: Job = {
+        id: Date.now().toString(),
+        title: offer.title,
+        description: offer.description,
+        budget: offer.price,
+        currency: 'PKR',
+        postedBy: offer.fromClient,
+        postedAt: new Date().toISOString(),
+        category: 'Direct Hire',
+        type: 'Fixed Price',
+        applicants: 0,
+        status: 'In Progress',
+        assignedTo: user?.id
+      };
+      
+      setJobs([...jobs, newJob]);
+      setDirectOffers(directOffers.map(o => o.id === offerId ? { ...o, status: 'Accepted' } : o));
+      alert("Offer accepted! Contract started.");
+    } else {
+      setDirectOffers(directOffers.map(o => o.id === offerId ? { ...o, status: 'Rejected' } : o));
+    }
+  }
 
   const handleWalletAction = (amount: number, method: string) => {
     if (!user) return;
@@ -1953,7 +2204,8 @@ const App = () => {
     if(confirm("Are you sure you want to logout?")) {
       setUser(null);
       setCurrentPage('home');
-      localStorage.removeItem('gab_session_v2');
+      // Clearing the specific session key
+      localStorage.removeItem('gab_session_v3');
     }
   };
 
@@ -2037,6 +2289,7 @@ const App = () => {
   const navItems = [
     { id: 'jobs', label: 'Find Work' },
     { id: 'freelancers', label: 'Hire Talent' },
+    { id: 'services', label: 'Services' },
     { id: 'dashboard', label: 'Dashboard' },
   ];
 
@@ -2050,8 +2303,16 @@ const App = () => {
     }
 
     switch(currentPage) {
-      case 'home': return <HomePage setPage={setCurrentPage} categories={categories} activeAds={activeAds} jobs={jobs} />;
+      case 'home': return <HomePage setPage={setCurrentPage} categories={categories} activeAds={activeAds} jobs={jobs} services={services} />;
       case 'jobs': return <JobsPage onSelectJob={(job) => { setSelectedJob(job); setCurrentPage('job-details'); }} categories={categories} jobs={jobs} />;
+      case 'services': return <ServicesPage services={services} onSelectService={(s) => {
+        alert("Full service view coming soon. Hire the freelancer from their profile.");
+        const freelancer = freelancers.find(f => f.user.id === s.freelancerId);
+        if(freelancer) {
+          setSelectedFreelancer(freelancer);
+          setCurrentPage('public-profile');
+        }
+      }} />;
       case 'job-details': return selectedJob ? (
         <JobDetailsPage 
           job={selectedJob} 
@@ -2060,6 +2321,10 @@ const App = () => {
           onApply={handleApplyJob} 
           proposals={proposals.filter(p => p.jobId === selectedJob.id)}
           onHire={handleHire}
+          onMessage={(fid, fname) => {
+            setChatPeer({ id: fid, name: fname, context: `Regarding Job: ${selectedJob.title}` });
+            setCurrentPage('chat');
+          }}
         />
       ) : null;
       case 'freelancers': return (
@@ -2076,19 +2341,25 @@ const App = () => {
           profile={selectedFreelancer} 
           onBack={() => setCurrentPage('freelancers')}
           onHire={() => setIsHireModalOpen(true)}
-          onMessage={() => setCurrentPage('chat')}
+          onMessage={() => {
+            setChatPeer({ id: selectedFreelancer.user.id, name: selectedFreelancer.user.name });
+            setCurrentPage('chat');
+          }}
           currentUser={user}
+          services={services.filter(s => s.freelancerId === selectedFreelancer.user.id)}
+          onViewService={(s) => alert(`Selected ${s.title}`)}
         />
       ) : null;
-      case 'chat': return selectedFreelancer && user ? (
+      case 'chat': return chatPeer ? (
         <ChatPage 
-          onBack={() => setCurrentPage('public-profile')} 
-          peerUser={selectedFreelancer} 
+          onBack={() => setCurrentPage('dashboard')} 
+          peerName={chatPeer.name}
+          context={chatPeer.context}
         />
       ) : null;
       case 'dashboard': return ProtectedRoute(
         <DashboardPage 
-          user={user!} // ProtectedRoute ensures user is not null
+          user={user!} 
           onEnterWorkroom={(job) => { setActiveWorkroomJob(job); setCurrentPage('workroom'); }} 
           activeAds={activeAds} 
           transactions={transactions}
@@ -2096,8 +2367,13 @@ const App = () => {
           onWithdraw={() => { setWalletModalType('Withdrawal'); setIsWalletModalOpen(true); }}
           jobs={jobs}
           proposals={proposals}
+          services={services.filter(s => s.freelancerId === user?.id)}
+          onCreateService={() => setCurrentPage('create-service')}
+          directOffers={directOffers.filter(o => o.toFreelancerId === user?.id)}
+          onRespondToOffer={handleRespondToOffer}
         />
       );
+      case 'create-service': return user ? <CreateServicePage user={user} categories={INITIAL_CATEGORIES} onSave={handleCreateService} onBack={() => setCurrentPage('dashboard')} /> : ProtectedRoute(null);
       case 'profile': return user ? <ProfilePage user={user} onSave={handleUpdateProfile} onBack={() => setCurrentPage('dashboard')} /> : ProtectedRoute(null);
       case 'post-job': return user ? <PostJobPage onPost={handlePostJob} categories={INITIAL_CATEGORIES} user={user} /> : ProtectedRoute(null);
       case 'workroom': return user ? <WorkroomPage onBack={() => setCurrentPage('dashboard')} user={user} onReleaseFunds={handleReleaseFunds} job={activeWorkroomJob} /> : ProtectedRoute(null);
@@ -2119,9 +2395,9 @@ const App = () => {
             onUpdatePlatformPayment={setPlatformPaymentDetails}
             onMarkJobPaid={handleMarkJobPaid}
           />
-        ) : <HomePage setPage={setCurrentPage} categories={categories} activeAds={activeAds} jobs={jobs} />;
+        ) : <HomePage setPage={setCurrentPage} categories={categories} activeAds={activeAds} jobs={jobs} services={services} />;
       
-      default: return <HomePage setPage={setCurrentPage} categories={categories} activeAds={activeAds} jobs={jobs} />;
+      default: return <HomePage setPage={setCurrentPage} categories={categories} activeAds={activeAds} jobs={jobs} services={services} />;
     }
   };
 
