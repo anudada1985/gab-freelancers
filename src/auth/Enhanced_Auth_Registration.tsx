@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { User, UserRole } from '../types';
+import { UserRole } from '../types';
+import type { User } from '../types';
 import { Button } from '../components/UIComponents';
 import { Mail, Lock, User as UserIcon, ArrowRight, LogIn, UserPlus } from 'lucide-react';
 
