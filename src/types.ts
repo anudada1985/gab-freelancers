@@ -57,15 +57,14 @@ export interface Job {
   assignedTo?: string;
 }
 
-// Fiverr-style "Gig"
 export interface Service {
   id: string;
   freelancerId: string;
   freelancer: User;
-  title: string; // e.g., "I will build a React app"
+  title: string;
   description: string;
   price: number;
-  deliveryTime: number; // in days
+  deliveryTime: number;
   category: string;
   image: string;
   rating: number;
@@ -83,7 +82,17 @@ export interface Proposal {
   status: 'Pending' | 'Accepted' | 'Rejected';
 }
 
-// New: Direct Offer from Client to Freelancer
+export interface WorkroomMessage {
+  id: string;
+  jobId: string;
+  senderId: string;
+  senderName: string;
+  senderRole: 'CLIENT' | 'FREELANCER' | 'SYSTEM';
+  text: string;
+  timestamp: string;
+  attachment?: string;
+}
+
 export interface DirectOffer {
   id: string;
   fromClient: User;
