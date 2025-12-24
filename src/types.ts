@@ -6,9 +6,19 @@ export const UserRole = {
 
 export type UserRole = typeof UserRole[keyof typeof UserRole];
 
+export interface ThemeConfig {
+  id: string;
+  name: string;
+  primary: string;
+  hover: string;
+  light: string;
+  text: string;
+  icon: string;
+}
+
 export interface PayoutDetails {
   method: 'Bank Transfer' | 'EasyPaisa' | 'JazzCash';
-  bankName?: string; // e.g., HBL, Meezan
+  bankName?: string;
   accountTitle: string;
   accountNumber: string;
 }
