@@ -10,16 +10,16 @@ import type { Job, FreelancerProfile, Service } from '../types';
 // --- Badges ---
 
 export const VerificationBadge = () => (
-  <div className="flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+  <div className="flex items-center gap-1 text-xs font-medium text-[var(--primary)] bg-[var(--primary-light)] px-2 py-0.5 rounded-full border border-[var(--primary-light)]">
     <ShieldCheck size={12} />
     <span>NADRA Verified</span>
   </div>
 );
 
-export const Badge = ({ children, color = 'slate' }: { children?: React.ReactNode, color?: 'slate' | 'emerald' | 'blue' | 'red' | 'yellow' }) => {
+export const Badge = ({ children, color = 'slate' }: { children?: React.ReactNode, color?: 'slate' | 'brand' | 'blue' | 'red' | 'yellow' }) => {
   const colors = {
     slate: 'bg-slate-100 text-slate-700 border-slate-200',
-    emerald: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+    brand: 'bg-[var(--primary-light)] text-[var(--primary)] border-[var(--primary-light)]',
     blue: 'bg-blue-50 text-blue-700 border-blue-100',
     red: 'bg-red-50 text-red-700 border-red-100',
     yellow: 'bg-yellow-50 text-yellow-800 border-yellow-100'
@@ -52,11 +52,11 @@ export const PaymentMethodBadge = ({ method }: { method: string }) => {
 export const JobCard: React.FC<{ job: Job; onClick: () => void }> = ({ job, onClick }) => (
   <div 
     onClick={onClick}
-    className="group bg-white p-6 rounded-xl border border-slate-200 hover:border-emerald-500 hover:shadow-lg transition-all cursor-pointer relative overflow-hidden"
+    className="group bg-white p-6 rounded-xl border border-slate-200 hover:border-[var(--primary)] hover:shadow-lg transition-all cursor-pointer relative overflow-hidden"
   >
     <div className="flex justify-between items-start mb-4">
       <div>
-        <h3 className="text-lg font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
+        <h3 className="text-lg font-bold text-slate-900 group-hover:text-[var(--primary)] transition-colors">
           {job.title}
         </h3>
         <div className="flex items-center gap-2 text-sm text-slate-500 mt-1">
@@ -84,8 +84,8 @@ export const JobCard: React.FC<{ job: Job; onClick: () => void }> = ({ job, onCl
       </div>
       <div className="flex items-center gap-2">
          {job.status === 'In Progress' && <Badge color="blue">In Progress</Badge>}
-         {job.status === 'Completed' && <Badge color="emerald">Completed</Badge>}
-         <span className="text-xs font-medium text-emerald-600">
+         {job.status === 'Completed' && <Badge color="brand">Completed</Badge>}
+         <span className="text-xs font-medium text-[var(--primary)]">
           {job.applicants} Proposals
          </span>
       </div>
@@ -109,10 +109,10 @@ export const ServiceCard: React.FC<{ service: Service; onClick: () => void }> = 
       <div className="flex items-center gap-2 mb-3">
         <img src={service.freelancer.avatar} className="w-6 h-6 rounded-full border border-slate-100" />
         <span className="text-sm font-bold text-slate-900 truncate">{service.freelancer.name}</span>
-        {service.freelancer.verified && <ShieldCheck size={12} className="text-emerald-500" />}
+        {service.freelancer.verified && <ShieldCheck size={12} className="text-[var(--primary)]" />}
       </div>
       
-      <h3 className="font-medium text-slate-800 mb-2 line-clamp-2 hover:text-emerald-600 transition-colors flex-1">
+      <h3 className="font-medium text-slate-800 mb-2 line-clamp-2 group-hover:text-[var(--primary)] transition-colors flex-1">
         {service.title}
       </h3>
       
@@ -124,7 +124,7 @@ export const ServiceCard: React.FC<{ service: Service; onClick: () => void }> = 
       
       <div className="flex items-center justify-between pt-3 border-t border-slate-100 mt-auto">
         <div className="text-xs text-slate-500 uppercase font-medium">Starting at</div>
-        <div className="text-lg font-bold text-emerald-600">PKR {service.price.toLocaleString()}</div>
+        <div className="text-lg font-bold text-[var(--primary)]">PKR {service.price.toLocaleString()}</div>
       </div>
     </div>
   </div>
@@ -139,7 +139,7 @@ export const FreelancerCard: React.FC<{ profile: FreelancerProfile; onViewProfil
           <h3 className="font-bold text-slate-900">{profile.user.name}</h3>
           {profile.user.verified && <VerificationBadge />}
         </div>
-        <p className="text-emerald-600 text-sm font-medium">{profile.title}</p>
+        <p className="text-[var(--primary)] text-sm font-medium">{profile.title}</p>
         <div className="flex items-center gap-1 text-yellow-500 text-sm mt-0.5">
           <Star size={14} fill="currentColor" />
           <span className="font-bold">{profile.rating}</span>
@@ -156,9 +156,6 @@ export const FreelancerCard: React.FC<{ profile: FreelancerProfile; onViewProfil
           {skill}
         </span>
       ))}
-      {profile.skills.length > 3 && (
-        <span className="text-xs bg-slate-50 text-slate-500 px-2 py-1 rounded-full">+{profile.skills.length - 3}</span>
-      )}
     </div>
 
     <div className="flex justify-between items-center pt-4 border-t border-slate-100">
@@ -168,7 +165,7 @@ export const FreelancerCard: React.FC<{ profile: FreelancerProfile; onViewProfil
           e.stopPropagation();
           onViewProfile?.();
         }}
-        className="text-sm font-medium text-emerald-600 hover:text-emerald-700 hover:underline"
+        className="text-sm font-medium text-[var(--primary)] hover:underline"
       >
         View Profile
       </button>
@@ -197,9 +194,9 @@ export const Button: React.FC<ButtonProps> = ({
 }) => {
   const baseStyle = "px-4 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
   const variants = {
-    primary: "bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm hover:shadow-emerald-200",
+    primary: "bg-[var(--primary)] text-white hover:bg-[var(--hover)] shadow-sm",
     secondary: "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50",
-    outline: "border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50",
+    outline: "border-2 border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary-light)]",
     ghost: "text-slate-600 hover:bg-slate-100",
     danger: "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
   };
